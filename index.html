@@ -10,20 +10,19 @@
     :root { --primary: #FF6F00; --dark: #2D3436; --light-bg: #fdfdfd; }
     body { background: var(--light-bg); height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Cairo', sans-serif; margin: 0; background-image: radial-gradient(var(--primary) 0.5px, transparent 0.5px), radial-gradient(var(--primary) 0.5px, var(--light-bg) 0.5px); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
     body.loading .gate-card { display: none; }
-    .gate-card { background: white; padding: 50px 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(255, 111, 0, 0.15); text-align: center; width: 90%; max-width: 400px; position: relative; overflow: hidden; border: 1px solid #eee; }
+    .gate-card { background: white; padding: 40px 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(255, 111, 0, 0.15); text-align: center; width: 90%; max-width: 400px; position: relative; overflow-y: auto; max-height: 90vh; border: 1px solid #eee; }
     h2 { color: var(--primary); font-weight: 900; letter-spacing: -1px; font-size: 2.2rem; }
-    .subtitle { color: #888; font-size: 0.95rem; margin-bottom: 40px; font-weight: 600; }
-    .btn-choice { width: 100%; margin: 15px 0; padding: 18px; border-radius: 18px; font-weight: 700; border: none; transition: 0.2s; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+    .subtitle { color: #888; font-size: 0.95rem; margin-bottom: 30px; font-weight: 600; }
+    .btn-choice { width: 100%; margin: 15px 0; padding: 15px; border-radius: 18px; font-weight: 700; border: none; transition: 0.2s; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
     .btn-customer { background: var(--dark); color: white; }
     .btn-driver { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(255, 111, 0, 0.3); }
     .btn-choice:active { transform: scale(0.96); }
     .form-section { display: none; text-align: right; margin-top: 10px; animation: slideUp 0.3s; }
-    .form-label { font-weight: 700; font-size: 0.9rem; color: #555; margin-bottom: 8px; display: block; }
-    .form-control { border-radius: 15px; padding: 15px; margin-bottom: 20px; border: 2px solid #f0f0f0; background: #fafafa; font-family: 'Cairo', sans-serif; font-weight: 600; }
+    .form-label { font-weight: 700; font-size: 0.9rem; color: #555; margin-bottom: 5px; display: block; }
+    .form-control { border-radius: 15px; padding: 12px; margin-bottom: 15px; border: 2px solid #f0f0f0; background: #fafafa; font-family: 'Cairo', sans-serif; font-weight: 600; }
     .form-control:focus { border-color: var(--primary); background: white; box-shadow: none; }
-    .back-btn { cursor: pointer; color: #aaa; font-size: 0.85rem; margin-bottom: 20px; display: inline-block; font-weight: 700; }
+    .back-btn { cursor: pointer; color: #aaa; font-size: 0.85rem; margin-bottom: 15px; display: inline-block; font-weight: 700; }
     
-    /* رسالة الترحيب بالعائدين */
     #welcomeBackMsg { display: none; background: #e3f2fd; color: #0d6efd; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
 
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -45,23 +44,36 @@
 
     <div id="customer-form" class="form-section">
       <div class="back-btn" onclick="goBack()">عودة للقائمة الرئيسية</div>
-      <h5 class="mb-4 fw-bold text-dark">حساب زبون جديد</h5>
-      <label class="form-label">الاسم الكامل</label>
-      <input type="text" id="custName" class="form-control" placeholder="مثال: أحمد علي">
-      <label class="form-label">رقم الهاتف</label>
-      <input type="tel" id="custPhone" class="form-control" placeholder="07xxxxxxxxx" pattern="[0-9]*">
+      <h5 class="mb-3 fw-bold text-dark">حساب زبون جديد</h5>
+      
+      <label class="form-label">الاسم الكامل *</label>
+      <input type="text" id="custName" class="form-control" placeholder="الاسم الثلاثي">
+      
+      <label class="form-label">رقم الهاتف (عراقي) *</label>
+      <input type="tel" id="custPhone" class="form-control" placeholder="07xxxxxxxxx" maxlength="11">
+      
       <button class="btn-choice btn-driver" onclick="registerUser('customer')">تسجيل ودخول</button>
     </div>
 
     <div id="driver-form" class="form-section">
       <div class="back-btn" onclick="goBack()">عودة للقائمة الرئيسية</div>
-      <h5 class="mb-4 fw-bold text-dark">تسجيل كابتن جديد</h5>
-      <label class="form-label">اسم الكابتن</label>
+      <h5 class="mb-3 fw-bold text-dark">تسجيل كابتن جديد</h5>
+      
+      <label class="form-label">اسم الكابتن *</label>
       <input type="text" id="drvName" class="form-control" placeholder="الاسم الثلاثي">
-      <label class="form-label">رقم الهاتف</label>
-      <input type="tel" id="drvPhone" class="form-control" placeholder="07xxxxxxxxx" pattern="[0-9]*">
-      <label class="form-label">صورة شخصية (اختياري)</label>
+      
+      <label class="form-label">رقم الهاتف (عراقي) *</label>
+      <input type="tel" id="drvPhone" class="form-control" placeholder="07xxxxxxxxx" maxlength="11">
+      
+      <label class="form-label">صورة شخصية للكابتن *</label>
       <input type="file" id="drvPhoto" class="form-control" accept="image/*">
+
+      <label class="form-label">رقم السيارة *</label>
+      <input type="text" id="drvCarNum" class="form-control" placeholder="مثال: بغداد 12345 أ">
+      
+      <label class="form-label">صورة السيارة (من الأمام) *</label>
+      <input type="file" id="drvCarPhoto" class="form-control" accept="image/*">
+      
       <button class="btn-choice btn-driver" onclick="registerUser('driver')">بدء العمل</button>
     </div>
   </div>
@@ -78,7 +90,7 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. إدارة هوية الجهاز (Device Fingerprint)
+    // 1. إدارة هوية الجهاز
     let deviceId = localStorage.getItem('carwa_device_id');
     if (!deviceId) {
       deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now();
@@ -87,29 +99,23 @@
 
     // 2. التحقق عند التحميل
     (function checkLogin() {
-      // هل المستخدم مسجل دخول حالياً؟
-      const userType = localStorage.getItem('carwa_user_type');
-      if (userType === 'customer') { window.location.href = "customer.html"; return; }
-      if (userType === 'driver') { window.location.href = "driver.html"; return; }
+        const userType = localStorage.getItem('carwa_user_type');
+        if (userType === 'customer') { window.location.href = "customer.html"; return; }
+        if (userType === 'driver') { window.location.href = "driver.html"; return; }
 
-      // إذا لم يكن مسجلاً، هل جهازه معروف في السيرفر؟
-      db.ref('devices/' + deviceId).once('value', snap => {
-        if (snap.exists()) {
-          const savedData = snap.val();
-          // نعرض رسالة ترحيب ونملأ البيانات تلقائياً أو نجبره على حسابه القديم عند الضغط
-          const msgBox = document.getElementById('welcomeBackMsg');
-          msgBox.innerHTML = `مرحباً بك مجدداً <b>${savedData.name}</b><br>سيتم الدخول لحسابك المسجل بهذا الجهاز.`;
-          msgBox.style.display = 'block';
-          
-          // تخزين البيانات القديمة في متغير لاستخدامه عند الضغط على تسجيل
-          window.boundAccount = savedData; 
-        }
-        document.body.classList.remove('loading');
-      });
+        db.ref('devices/' + deviceId).once('value', snap => {
+            if (snap.exists()) {
+                const savedData = snap.val();
+                const msgBox = document.getElementById('welcomeBackMsg');
+                msgBox.innerHTML = `مرحباً بك مجدداً <b>${savedData.name}</b><br>سيتم الدخول لحسابك المسجل بهذا الجهاز.`;
+                msgBox.style.display = 'block';
+                window.boundAccount = savedData; 
+            }
+            document.body.classList.remove('loading');
+        });
     })();
 
     function showForm(type) {
-      // إذا كان الجهاز مربوطاً بحساب، قم بالدخول المباشر للحساب القديم
       if (window.boundAccount) {
         if(window.boundAccount.type !== type) {
           alert("عفواً، هذا الجهاز مسجل كـ " + (window.boundAccount.type === 'driver' ? 'سائق' : 'زبون') + " ولا يمكن تغيير نوع الحساب.");
@@ -118,7 +124,6 @@
         forceLogin(window.boundAccount);
         return;
       }
-
       document.getElementById('main-menu').style.display = 'none';
       document.getElementById(type + '-form').style.display = 'block';
     }
@@ -129,10 +134,8 @@
       document.getElementById('main-menu').style.display = 'block';
     }
 
-    // دالة الدخول الإجباري (للحساب المربوط)
     function forceLogin(accountData) {
       localStorage.setItem('carwa_user_type', accountData.type);
-      
       if (accountData.type === 'customer') {
         localStorage.setItem('carwa_user_name', accountData.name);
         localStorage.setItem('carwa_user_phone', accountData.phone);
@@ -144,8 +147,13 @@
       }
     }
 
+    // دالة التحقق من صحة رقم الهاتف العراقي
+    function validateIraqiPhone(phone) {
+        const regex = /^07\d{9}$/; // يبدأ بـ 07 ويتبعه 9 أرقام (المجموع 11)
+        return regex.test(phone);
+    }
+
     function registerUser(type) {
-      // حتى لو كتب بيانات جديدة، إذا الجهاز مربوط نستخدم البيانات القديمة (أمان إضافي)
       if (window.boundAccount) {
         alert("هذا الجهاز مسجل مسبقاً باسم " + window.boundAccount.name + ". سيتم الدخول للحساب الأصلي.");
         forceLogin(window.boundAccount);
@@ -153,43 +161,58 @@
       }
 
       if (type === 'customer') {
+        // --- تسجيل الزبون ---
         const name = document.getElementById('custName').value.trim();
         const phone = document.getElementById('custPhone').value.trim();
-        if (!name || !phone) { alert("يرجى ملء جميع الحقول"); return; }
-        
+
+        if (!name || !phone) { alert("يرجى ملء جميع الحقول."); return; }
+
+        if (!validateIraqiPhone(phone)) {
+            alert("يرجى إدخال رقم هاتف عراقي صحيح (يتكون من 11 رقم ويبدأ بـ 07)");
+            return;
+        }
+
         saveAndRedirect('customer', name, phone, null);
 
       } else {
+        // --- تسجيل السائق (الكابتن) ---
         const name = document.getElementById('drvName').value.trim();
         const phone = document.getElementById('drvPhone').value.trim();
         const photoInput = document.getElementById('drvPhoto');
-        if (!name || !phone) { alert("يرجى ملء الاسم والهاتف"); return; }
+        const carNum = document.getElementById('drvCarNum').value.trim();
+        const carPhotoInput = document.getElementById('drvCarPhoto');
 
-        if (photoInput.files && photoInput.files[0]) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            localStorage.setItem('carwa_driver_photo', e.target.result);
-            saveAndRedirect('driver', name, phone, e.target.result);
-          };
-          reader.readAsDataURL(photoInput.files[0]);
-        } else {
-          saveAndRedirect('driver', name, phone, "none");
+        // التحقق من الحقول الإجبارية للكابتن
+        if (!name || !phone || !carNum || !photoInput.files[0] || !carPhotoInput.files[0]) { 
+            alert("يرجى ملء جميع الحقول ورفع الصور المطلوبة (الشخصية والسيارة)."); 
+            return; 
         }
+
+        if (!validateIraqiPhone(phone)) {
+            alert("يرجى إدخال رقم هاتف عراقي صحيح (يتكون من 11 رقم ويبدأ بـ 07)");
+            return;
+        }
+
+        // قراءة الصور (الشخصية + السيارة)
+        const reader1 = new FileReader(); // للصورة الشخصية
+        reader1.onload = function(e1) {
+            const personalPhotoUrl = e1.target.result;
+            
+            const reader2 = new FileReader(); // لصورة السيارة
+            reader2.onload = function(e2) {
+                const carPhotoUrl = e2.target.result;
+                // حفظ كل البيانات
+                saveAndRedirect('driver', name, phone, personalPhotoUrl, carNum, carPhotoUrl);
+            };
+            reader2.readAsDataURL(carPhotoInput.files[0]);
+        };
+        reader1.readAsDataURL(photoInput.files[0]);
       }
     }
 
-    function saveAndRedirect(type, name, phone, photoUrl) {
-      // 1. حفظ في LocalStorage
+    function saveAndRedirect(type, name, phone, photoUrl, carNum = null, carPhotoUrl = null) {
       localStorage.setItem('carwa_user_type', type);
-      if(type === 'customer') {
-        localStorage.setItem('carwa_user_name', name);
-        localStorage.setItem('carwa_user_phone', phone);
-      } else {
-        localStorage.setItem('carwa_driver_name', name);
-        localStorage.setItem('carwa_driver_phone', phone);
-      }
-
-      // 2. إعداد بيانات المستخدم
+      
       const userData = {
         name: name,
         phone: phone,
@@ -197,18 +220,29 @@
         joined: new Date().toISOString()
       };
 
-      if (type === 'driver') {
+      if(type === 'customer') {
+        localStorage.setItem('carwa_user_name', name);
+        localStorage.setItem('carwa_user_phone', phone);
+      } 
+      else {
+        // بيانات السائق الإضافية
+        localStorage.setItem('carwa_driver_name', name);
+        localStorage.setItem('carwa_driver_phone', phone);
+        localStorage.setItem('carwa_driver_photo', photoUrl); // تخزين محلي
+        
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 30);
+        
         userData.photo = photoUrl;
+        userData.carNum = carNum;
+        userData.carPhoto = carPhotoUrl;
         userData.subscriptionExpiry = expiryDate.toISOString();
         userData.isLocked = false;
       }
 
-      // 3. الحفظ في Firebase (Users + Devices)
       const updates = {};
       updates[`users/${type}s/${phone}`] = userData;
-      updates[`devices/${deviceId}`] = { type: type, phone: phone, name: name }; // ربط الجهاز
+      updates[`devices/${deviceId}`] = { type: type, phone: phone, name: name };
 
       db.ref().update(updates).then(() => {
         window.location.href = type + ".html";

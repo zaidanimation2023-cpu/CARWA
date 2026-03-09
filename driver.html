@@ -3,94 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>كروة - كابتن العراق</title>
+  <title>كروة - كابتن العراق (Pro)</title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    :root { --primary: #FF6F00; --dark: #2D3436; --shadow: 0 4px 20px rgba(0,0,0,0.15); }
-    body, html { height: 100%; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; overflow: hidden; background: white; }
+    :root { --primary: #FF6F00; --dark: #2D3436; --bg-color: white; --text-color: #2D3436; --panel-bg: rgba(255,255,255,0.95); }
+    body.dark-mode { --bg-color: #1a1a1a; --text-color: #f0f0f0; --panel-bg: rgba(30,30,30,0.95); }
+    body, html { height: 100%; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; overflow: hidden; background: var(--bg-color); color: var(--text-color); transition: 0.3s; }
     #map { height: 100vh; width: 100%; position: absolute; top:0; left:0; z-index: 1; }
-    
-    /* زر إعادة الكاميرا لموقع السيارة */
-    .recenter-btn {
-      position: absolute; bottom: 120px; right: 20px; z-index: 10;
-      background: white; border: none; width: 55px; height: 55px;
-      border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      color: var(--dark); display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; transition: 0.2s; cursor: pointer; pointer-events: auto;
-    }
-    .recenter-btn:active { transform: scale(0.9); color: var(--primary); }
+
+    .theme-btn { position: absolute; top: 20px; left: 20px; z-index: 20; background: var(--panel-bg); width: 45px; height: 45px; border-radius: 50%; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: var(--text-color); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; backdrop-filter: blur(5px); }
+    .recenter-btn { position: absolute; bottom: 120px; right: 20px; z-index: 10; background: var(--panel-bg); border: none; width: 55px; height: 55px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: var(--text-color); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: 0.2s; cursor: pointer; pointer-events: auto; }
     .recenter-btn.active { color: var(--primary); border: 2px solid var(--primary); }
 
     .ui-top { position: relative; z-index: 10; padding: 20px; pointer-events: none; }
-    .panel-info { 
-      background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-      padding: 15px 20px; border-radius: 20px; pointer-events: auto; 
-      max-width: 450px; box-shadow: var(--shadow); margin: 0 auto; border: 1px solid #eee;
-    }
-    h6 { font-weight: 800; color: var(--primary); margin: 0; font-size: 1rem; }
-    .btn-logout { border: 1px solid #fee; color: #dc3545; background: white; border-radius: 15px; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border: 1px solid #dc3545; }
-    #statusPanel { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.9rem; font-weight: 600; color: #555; }
+    .panel-info { background: var(--panel-bg); backdrop-filter: blur(10px); padding: 15px 20px; border-radius: 20px; pointer-events: auto; max-width: 450px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); margin: 0 auto; border: 1px solid rgba(0,0,0,0.05); }
     
+    h6 { font-weight: 800; color: var(--primary); margin: 0; font-size: 1rem; }
+    .btn-logout { border: 1px solid #dc3545; color: #dc3545; background: transparent; border-radius: 12px; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; }
+    
+    #statusPanel { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 0.9rem; font-weight: 600; color: #777; }
+    body.dark-mode #statusPanel { border-top-color: rgba(255,255,255,0.1); color: #aaa; }
+
     .trip-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-    .btn-action { width: 100%; font-weight: 800; border-radius: 12px; padding: 12px; font-size: 0.95rem; border: none; box-shadow: var(--shadow); transition: 0.2s; }
+    .btn-action { width: 100%; font-weight: 800; border-radius: 12px; padding: 12px; font-size: 0.95rem; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: 0.2s; }
     .btn-start { background: var(--primary); color: white; grid-column: span 2; }
     .btn-finish { background: #2ecc71; color: white; grid-column: span 2; }
     .btn-call { background: #3498db; color: white; }
     .btn-cancel { background: #e74c3c; color: white; }
     
-    .btn-accept-map { background: var(--primary); color: white; border: none; font-weight: 700; width: 100%; border-radius: 8px; margin-top: 5px; padding: 6px; font-size: 0.9rem; }
+    .btn-accept-map { background: var(--primary); color: white; border: none; font-weight: 700; border-radius: 8px; padding: 8px; font-size: 0.9rem; flex: 1; }
+    .btn-reject-map { background: #e74c3c; color: white; border: none; font-weight: 700; border-radius: 8px; padding: 8px; font-size: 0.9rem; flex: 1; }
+    .order-stat-row { display: flex; justify-content: space-around; background: #f8f9fa; padding: 8px; border-radius: 8px; margin: 10px 0; font-size: 0.85rem; }
+    .stat-item { display: flex; flex-direction: column; align-items: center; color: #555; }
+    .stat-val { font-weight: 900; color: var(--dark); font-size: 1rem; }
 
-    .subscription-blocker {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: white; z-index: 9999; display: none;
-      flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; padding: 30px;
-    }
-    .sub-icon { font-size: 4.5rem; color: #dc3545; margin-bottom: 20px; }
-    .sub-input { 
-      text-align: center; font-size: 1.8rem; letter-spacing: 5px; 
-      border: 2px solid #eee; border-radius: 15px; padding: 15px; 
-      width: 100%; max-width: 320px; margin: 20px 0; outline: none;
-    }
+    .subscription-blocker { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
+    .sub-input { text-align: center; font-size: 1.8rem; letter-spacing: 5px; border: 2px solid #eee; border-radius: 15px; padding: 15px; width: 100%; max-width: 320px; margin: 20px 0; outline: none; background: var(--bg-color); color: var(--text-color); }
     .btn-unlock { background: var(--dark); color: white; width: 100%; max-width: 320px; padding: 15px; border-radius: 15px; font-weight: bold; border: none; }
 
     .chat-float-btn { position: fixed; bottom: 35px; left: 25px; z-index: 90; width: 60px; height: 60px; border-radius: 50%; background: var(--dark); color: white; border: none; box-shadow: 0 5px 25px rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; font-size: 1.5rem; }
     .chat-popup { position: fixed; bottom: 105px; left: 25px; width: 330px; max-width: 90vw; background: white; border-radius: 20px; z-index: 100; box-shadow: 0 10px 45px rgba(0,0,0,0.25); display: none; flex-direction: column; overflow: hidden; border: 1px solid #eee; }
-    .chat-header { background: var(--dark); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-    .chat-msgs { height: 260px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; }
-    .msg { padding: 10px 15px; border-radius: 15px; font-size: 0.9rem; max-width: 80%; line-height: 1.4; }
-    .msg.me { background: var(--primary); color: white; align-self: flex-start; border-bottom-right-radius: 2px; }
-    .msg.other { background: #e9ecef; color: #333; align-self: flex-end; border-bottom-left-radius: 2px; }
-    .chat-footer { padding: 10px; display: flex; gap: 10px; background: white; border-top: 1px solid #eee; }
-    .chat-input { flex: 1; border: 1px solid #ddd; border-radius: 25px; padding: 10px 18px; outline: none; }
-
-    .stats-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); z-index: 200; display: none; justify-content: center; align-items: center; }
-    .stats-card { background: white; width: 90%; max-width: 380px; border-radius: 30px; padding: 40px 30px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.15); border: 1px solid #eee; }
+    .chat-input { width: calc(100% - 60px); padding: 12px 15px; border: none; border-top: 1px solid #eee; outline: none; background: #f8f9fa; }
+    .chat-footer { display: flex; padding: 10px; background: white; border-top: 1px solid #eee; }
+    .chat-footer button { width: 50px; height: 50px; margin-right: 10px; }
+    .stats-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 200; display: none; justify-content: center; align-items: center; }
+    .stats-card { background: white; width: 90%; max-width: 380px; border-radius: 30px; padding: 40px 30px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.3); }
     .price-display { font-size: 2.5rem; color: var(--primary); font-weight: 900; margin: 20px 0; }
+    .gm-style .gm-style-iw { font-family: 'Cairo', sans-serif !important; padding: 0 !important; overflow: hidden !important; border-radius: 12px !important; }
+    
+    /* ⭐ نافذة إعدادات السيارة */
+    .car-settings-modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+      z-index: 9998; display: none; justify-content: center; align-items: center;
+    }
+    .car-settings-card {
+      background: white; width: 90%; max-width: 400px;
+      border-radius: 25px; padding: 30px; text-align: center;
+    }
+    .car-input {
+      width: 100%; padding: 15px; border: 2px solid #eee;
+      border-radius: 12px; font-size: 1.1rem; font-weight: 700;
+      text-align: center; margin: 15px 0; outline: none;
+    }
+    .car-input:focus { border-color: var(--primary); }
+    .btn-save-car {
+      background: var(--primary); color: white; width: 100%;
+      padding: 15px; border-radius: 12px; font-weight: 800;
+      border: none; font-size: 1rem;
+    }
   </style>
 </head>
 <body>
 
   <div id="subBlocker" class="subscription-blocker">
-    <i class="fas fa-id-card-alt sub-icon"></i>
-    <h3 class="fw-bold mb-2">عفواً.. الحساب مقيد</h3>
-    <p class="text-muted mb-4">يرجى تجديد الاشتراك أو إدخال كود التفعيل (PIN)</p>
+    <i class="fas fa-id-card-alt fa-4x text-danger mb-4"></i>
+    <h3 class="fw-bold mb-2">الحساب مقيد</h3>
     <input type="number" id="pinInput" class="sub-input" placeholder="000000">
     <button class="btn-unlock" onclick="redeemPin()">تفعيل الآن</button>
-    <button onclick="logout()" class="btn btn-link text-muted mt-3">تسجيل خروج</button>
+  </div>
+
+  <!-- ⭐ نافذة إعدادات رقم السيارة -->
+  <div id="carSettingsModal" class="car-settings-modal">
+    <div class="car-settings-card">
+      <i class="fas fa-car-side fa-3x text-warning mb-3"></i>
+      <h4 class="fw-bold mb-2">بيانات السيارة</h4>
+      <p class="text-muted mb-3">أدخل رقم لوحة سيارتك ليظهر للزبون</p>
+      <input type="text" id="carPlateInput" class="car-input" placeholder="مثال: بغداد 12345">
+      <button class="btn-save-car" onclick="saveCarPlate()">حفظ ومتابعة</button>
+    </div>
   </div>
 
   <div id="map"></div>
   
-  <button id="recenterBtn" class="recenter-btn active" onclick="recenterCamera()" title="تتبع السيارة">
-    <i class="fas fa-location-arrow"></i>
-  </button>
+  <button class="theme-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+  <button id="recenterBtn" class="recenter-btn active" onclick="recenterCamera()"><i class="fas fa-location-arrow"></i></button>
 
   <audio id="orderSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+  <audio id="cancelSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
   <div class="ui-top">
     <div class="panel-info" id="mainPanel">
@@ -112,29 +126,32 @@
   </div>
 
   <button id="chatBtn" class="chat-float-btn" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
+  
   <div id="chatWindow" class="chat-popup">
-    <div class="chat-header"><span>الزبون</span><button class="btn btn-sm text-white" onclick="toggleChat()">×</button></div>
-    <div class="chat-msgs" id="chatMsgs"></div>
+    <div style="background:var(--dark); color:white; padding:15px; display:flex; justify-content:space-between;">
+      <span>الزبون</span><button class="btn btn-sm text-white" onclick="toggleChat()">×</button>
+    </div>
+    <div class="chat-msgs" id="chatMsgs" style="height:260px; overflow-y:auto; padding:15px; background:#f8f9fa;"></div>
     <div class="chat-footer">
-      <input type="text" id="chatInput" class="chat-input" placeholder="اكتب هنا...">
+      <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة...">
       <button class="btn btn-warning rounded-circle" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
 
   <div class="stats-overlay" id="statsOverlay">
     <div class="stats-card">
-      <h3 class="fw-bold mb-3">نهاية الرحلة ✅</h3>
-      <div class="mb-2 text-muted">المسافة المقطوعة</div>
-      <div id="statDist" class="fw-bold fs-4">--</div>
+      <h3 class="fw-bold mb-3 text-dark">نهاية الرحلة ✅</h3>
+      <div class="mb-2 text-muted">المسافة</div>
+      <div id="statDist" class="fw-bold fs-4 text-dark">--</div>
       <div class="mt-4 text-muted">المبلغ المستحق</div>
       <div class="price-display" id="statPrice">0 د.ع</div>
-      <button class="btn btn-dark w-100 mt-3 py-3 rounded-4 fw-bold" onclick="location.reload()">تم استلام المبلغ</button>
+      <button class="btn btn-dark w-100 mt-3 py-3 rounded-4 fw-bold" onclick="location.reload()">استلام وإنهاء</button>
     </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDVsOdieu4zCgOa9ZBASM05vX-DLeTmkc8&language=ar&v=beta"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDVsOdieu4zCgOa9ZBASM05vX-DLeTmkc8&language=ar&v=beta&callback=initMap"></script>
 
   <script>
     const firebaseConfig = { apiKey: "AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc", databaseURL: "https://carwa-zaid-default-rtdb.firebaseio.com", projectId: "carwa-zaid" };
@@ -143,12 +160,66 @@
     
     let map, markers = {}, directionsService, solidRenderer;
     let driverMarker = null, currentOrder = null, tripStats = { distanceVal: 0, distance: '' };
-    let isAutoFollow = true; // متغير للتحكم في التتبع التلقائي
+    let isAutoFollow = true; 
+    let lastLat = 0, lastLng = 0;
+    let wakeLock = null;
+    let currentHeading = 0;
+    let lastHeading = 0;
+    let headingHistory = [];
+
+    const lightStyle = [ { "elementType": "geometry", "stylers": [{ "color": "#f5f5f5" }] }, { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#ffffff" }] } ];
+    const darkStyle = [ { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] }, { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] }, { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] } ];
+
     const driverName = localStorage.getItem('carwa_driver_name') || "كابتن";
     const driverPhone = localStorage.getItem('carwa_driver_phone');
+    // ⭐ جلب رقم اللوحة من localStorage
+    let carPlate = localStorage.getItem('carwa_driver_carplate') || "";
+    
     document.getElementById('driverTitle').innerText = driverName;
 
-    const silverStyle = [ { "elementType": "geometry", "stylers": [{ "color": "#f5f5f5" }] }, { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#ffffff" }] } ];
+    async function requestWakeLock() {
+      try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+    }
+
+    // ⭐ دالة إنشاء أيقونة سيارة قابلة للدوران
+    function createCarIcon(rotation = 0) {
+      return {
+        url: "https://cdn-icons-png.flaticon.com/512/3097/3097180.png",
+        scaledSize: new google.maps.Size(50, 50),
+        anchor: new google.maps.Point(25, 25),
+        rotation: rotation,
+        labelOrigin: new google.maps.Point(25, 25)
+      };
+    }
+
+    // ⭐ دالة تحديث دوران السيارة بسلاسة
+    function updateCarRotation(newHeading) {
+      headingHistory.push(newHeading);
+      if (headingHistory.length > 5) headingHistory.shift();
+      
+      let avgHeading = headingHistory.reduce((a, b) => a + b, 0) / headingHistory.length;
+      
+      if (Math.abs(avgHeading - currentHeading) > 180) {
+        if (avgHeading > currentHeading) avgHeading -= 360;
+        else avgHeading += 360;
+      }
+      
+      currentHeading = avgHeading;
+      lastHeading = avgHeading;
+      
+      if (driverMarker) {
+        driverMarker.setIcon(createCarIcon(currentHeading));
+      }
+    }
+
+    // ⭐ حساب الاتجاه من نقطتين
+    function calculateHeading(lat1, lng1, lat2, lng2) {
+      const y = Math.sin(lng2 - lng1) * Math.cos(lat2);
+      const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1);
+      let heading = Math.atan2(y, x) * (180 / Math.PI);
+      heading = (heading + 360) % 360;
+      return heading;
+    }
 
     function initMap() {
       const savedPos = { 
@@ -157,16 +228,10 @@
       };
 
       map = new google.maps.Map(document.getElementById("map"), {
-        center: savedPos,
-        zoom: 14,
-        disableDefaultUI: true,
-        styles: silverStyle,
-        tilt: 0,
-        heading: 0,
-        mapId: '90f87356969d889c' 
+        center: savedPos, zoom: 14, disableDefaultUI: true,
+        styles: lightStyle, tilt: 0, heading: 0
       });
 
-      // إذا قام المستخدم بسحب الخريطة، نوقف التتبع التلقائي
       map.addListener('dragstart', () => {
         isAutoFollow = false;
         document.getElementById('recenterBtn').classList.remove('active');
@@ -174,22 +239,46 @@
 
       directionsService = new google.maps.DirectionsService();
       solidRenderer = new google.maps.DirectionsRenderer({ 
-        map: map, 
-        suppressMarkers: true, 
+        map: map, suppressMarkers: true, 
         polylineOptions: { strokeColor: "#FF6F00", strokeWeight: 7, strokeOpacity: 0.9 } 
       });
 
       driverMarker = new google.maps.Marker({
-        position: savedPos,
+        position: savedPos, 
         map: map,
-        icon: { url: "https://cdn-icons-png.flaticon.com/512/3097/3097180.png", scaledSize: new google.maps.Size(45, 45), anchor: new google.maps.Point(22, 22) }
+        icon: createCarIcon(0),
+        title: driverName
       });
+
+      // ⭐ عرض نافذة إعدادات السيارة إذا لم تكن محفوظة
+      if (!carPlate) {
+        document.getElementById('carSettingsModal').style.display = 'flex';
+      }
 
       listenForOrders();
       startGpsTracking();
+      document.addEventListener('click', requestWakeLock);
     }
 
-    // دالة إعادة التمركز
+    // ⭐ حفظ رقم لوحة السيارة
+    function saveCarPlate() {
+      const input = document.getElementById('carPlateInput').value.trim();
+      if (!input) {
+        alert("يرجى إدخال رقم اللوحة");
+        return;
+      }
+      carPlate = input;
+      localStorage.setItem('carwa_driver_carplate', carPlate);
+      document.getElementById('carSettingsModal').style.display = 'none';
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      map.setOptions({ styles: isDark ? darkStyle : lightStyle });
+      document.querySelector('.theme-btn i').className = isDark ? 'fas fa-sun text-warning' : 'fas fa-moon';
+    }
+
     function recenterCamera() {
       isAutoFollow = true;
       document.getElementById('recenterBtn').classList.add('active');
@@ -202,64 +291,170 @@
       }
     }
 
+    function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+      if(!lat2 || !lon2) return 999;
+      var R = 6371; var dLat = (lat2-lat1) * (Math.PI/180); var dLon = (lon2-lon1) * (Math.PI/180); 
+      var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c * 1000;
+    }
+
+    // ⭐ تتبع GPS مع دعم دوران السيارة
     function startGpsTracking() {
       if (navigator.geolocation) {
         navigator.geolocation.watchPosition(pos => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
-          const heading = pos.coords.heading || 0;
-          const latLng = new google.maps.LatLng(lat, lng);
+          const speed = pos.coords.speed || 0;
+          const accuracy = pos.coords.accuracy || 10;
+          
+          let heading = pos.coords.heading;
+          
+          if (heading === null || heading === undefined || speed < 0.5) {
+            if (lastLat !== 0 && lastLng !== 0) {
+              heading = calculateHeading(lastLat * Math.PI/180, lastLng * Math.PI/180, lat * Math.PI/180, lng * Math.PI/180);
+            } else {
+              heading = currentHeading;
+            }
+          }
+          
+          const dist = getDistanceFromLatLonInKm(lat, lng, lastLat, lastLng);
+          if(dist < 3 && speed < 0.5) return;
 
+          lastLat = lat; lastLng = lng;
           localStorage.setItem('carwa_driver_lat', lat);
           localStorage.setItem('carwa_driver_lng', lng);
+          
+          const latLng = new google.maps.LatLng(lat, lng);
+          if (driverMarker) {
+            driverMarker.setPosition(latLng);
+            updateCarRotation(heading);
+          }
 
-          if (driverMarker) driverMarker.setPosition(latLng);
-
-          // المطاردة التلقائية للكاميرا
           if (isAutoFollow) {
             map.panTo(latLng);
-            if (currentOrder) {
-              map.setZoom(19);
-              map.setTilt(55);
-              if (heading > 0) map.setHeading(heading);
+            if (currentOrder) { 
+              map.setZoom(19); 
+              map.setTilt(55); 
+              if (heading !== null && heading !== undefined) {
+                map.setHeading(heading);
+              }
             }
           }
 
           if (currentOrder) {
-            db.ref('orders/' + currentOrder.id + '/driver_location').set({ lat, lng, heading });
+            db.ref('orders/' + currentOrder.id + '/driver_location').set({ 
+              lat, lng, 
+              heading: currentHeading,
+              speed,
+              accuracy,
+              timestamp: Date.now()
+            });
           }
-        }, null, { enableHighAccuracy: true });
+        }, err => {
+          console.error("GPS Error:", err);
+          document.getElementById('logTxt').innerHTML = '<span class="text-danger">⚠️ خطأ في GPS</span>';
+        }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+      } else {
+        document.getElementById('logTxt').innerHTML = '<span class="text-danger">⚠️ GPS غير مدعوم</span>';
       }
     }
 
+    function hideOrder(id) {
+        if (markers[id]) { markers[id].setMap(null); delete markers[id]; }
+        let ignored = JSON.parse(localStorage.getItem('carwa_ignored_orders') || "[]");
+        if(!ignored.includes(id)) { ignored.push(id); localStorage.setItem('carwa_ignored_orders', JSON.stringify(ignored)); }
+    }
+
     function listenForOrders() {
-      db.ref('orders').on('value', snap => {
+      db.ref('orders').orderByChild('status').equalTo('pending').limitToLast(20).on('value', snap => {
         if (currentOrder) return;
-        for(let k in markers) markers[k].setMap(null); markers = {};
+        const ignored = JSON.parse(localStorage.getItem('carwa_ignored_orders') || "[]");
+        const newOrders = snap.val() || {};
+        for(let id in markers) { if(!newOrders[id]) { markers[id].setMap(null); delete markers[id]; } }
+
         snap.forEach(child => {
           const o = child.val();
-          if(o.status === 'pending') {
-            const m = new google.maps.Marker({ position: o.pickup, map: map, animation: google.maps.Animation.BOUNCE });
-            const info = new google.maps.InfoWindow({ content: `<div class='p-2 text-end'><b>${o.customerName}</b><br><button class="btn-accept-map mt-2" onclick="acceptOrder('${o.id}')">قبول وتوصيل</button></div>` });
-            m.addListener("click", () => info.open(map, m));
-            markers[o.id] = m;
+          if (ignored.includes(o.id)) return;
+
+          if(!markers[o.id]) {
+              const m = new google.maps.Marker({ position: o.pickup, map: map, animation: google.maps.Animation.BOUNCE });
+              
+              let contentDiv = document.createElement('div');
+              contentDiv.className = 'text-center p-3'; contentDiv.style.minWidth = '220px';
+              contentDiv.innerHTML = `<div class="spinner-border text-warning spinner-border-sm mb-2"></div><br><small>جاري حساب الرحلة...</small>`;
+              const info = new google.maps.InfoWindow({ content: contentDiv });
+              
+              directionsService.route({ origin: o.pickup, destination: o.dest, travelMode: 'DRIVING' }, (result, status) => {
+                  let distText = "--", durText = "--", endAddr = "وجهة غير محددة";
+                  if (status === 'OK' && result.routes[0]) {
+                      const leg = result.routes[0].legs[0]; 
+                      distText = leg.distance.text; 
+                      durText = leg.duration.text;
+                      endAddr = leg.end_address;
+                  }
+
+                  const finalContent = `
+                    <div class='text-center' style="width:250px; font-family:'Cairo'; padding:10px;">
+                      <h6 class="mb-1 text-dark fw-bold">${o.customerName}</h6>
+                      
+                      <div class="text-end mb-2 px-2 py-1" style="background:#fff3cd; color:#856404; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba;">
+                         <i class="fas fa-map-marker-alt text-danger ms-1"></i>
+                         <strong>إلى:</strong> ${endAddr}
+                      </div>
+
+                      <div class="order-stat-row">
+                         <div class="stat-item"><i class="fas fa-road text-warning mb-1"></i><span class="stat-val">${distText}</span></div>
+                         <div class="stat-item" style="border-right:1px solid #ddd; padding-right:10px"><i class="fas fa-clock text-primary mb-1"></i><span class="stat-val">${durText}</span></div>
+                      </div>
+
+                      <div class="d-flex gap-2 mt-3">
+                         <button class="btn-reject-map" onclick="hideOrder('${o.id}')"><i class="fas fa-times"></i> رفض</button>
+                         <button class="btn-accept-map" onclick="acceptOrder('${o.id}')"><i class="fas fa-check"></i> قبول</button>
+                      </div>
+                    </div>`;
+                  
+                  info.setContent(finalContent);
+              });
+
+              m.addListener("click", () => info.open(map, m));
+              markers[o.id] = m;
+              document.getElementById('orderSound').play().catch(()=>{});
           }
         });
       });
     }
 
+    // ⭐ دالة قبول الطلب - إرسال بيانات السائق الكاملة
     function acceptOrder(id) {
       db.ref('orders/' + id).once('value').then(snap => {
         const oData = snap.val();
+        if(!oData) return;
         currentOrder = oData;
-        isAutoFollow = true; // تفعيل التتبع عند بدء الرحلة
+        isAutoFollow = true;
         document.getElementById('recenterBtn').classList.add('active');
         
-        db.ref('orders/' + id).update({ status: 'accepted', driver: driverName });
-        for(let k in markers) markers[k].setMap(null);
-        document.getElementById('logTxt').innerHTML = `<span class="text-success">✔ تم القبول</span> اتجه لموقع الزبون`;
-        document.getElementById('tripControls').style.display = 'block';
+        // ⭐ إرسال بيانات السائق الكاملة بما فيها رقم اللوحة
+        db.ref('orders/' + id).update({ 
+          status: 'accepted', 
+          driver: driverName, 
+          driverPhone: driverPhone,
+          carPlate: carPlate || 'غير محدد'  // ⭐ رقم اللوحة
+        });
         
+        for(let k in markers) markers[k].setMap(null); markers = {};
+
+        const orderMonitor = db.ref('orders/' + id);
+        orderMonitor.on('value', orderSnap => {
+            const val = orderSnap.val();
+            if (!val || val.status === 'cancelled') {
+                document.getElementById('cancelSound').play().catch(()=>{});
+                alert("⚠️ تنبيه: قام الزبون بإلغاء الرحلة!");
+                orderMonitor.off(); location.reload();
+            }
+        });
+
+        document.getElementById('logTxt').innerHTML = `<span class="text-success fw-bold">✔ لديك رحلة نشطة</span>`;
+        document.getElementById('tripControls').style.display = 'block';
         const phone = oData.customerPhone || "";
         document.getElementById('tripControls').innerHTML = `
           <div class="trip-actions">
@@ -270,13 +465,14 @@
         document.getElementById('chatBtn').style.display = 'flex';
         initChat(id);
         calcRoute({ lat: parseFloat(localStorage.getItem('carwa_driver_lat')), lng: parseFloat(localStorage.getItem('carwa_driver_lng')) }, oData.pickup);
+        requestWakeLock(); 
       });
     }
 
     function startTrip() {
       if(!currentOrder) return;
       db.ref('orders/' + currentOrder.id).update({ status: 'in_progress' });
-      document.getElementById('logTxt').innerHTML = `جاري التوجه للوجهة النهائية...`;
+      document.getElementById('logTxt').innerHTML = `في الطريق للوجهة...`;
       document.getElementById('tripControls').innerHTML = `<button class="btn-action btn-finish" onclick="finishTrip()">إنهاء المشوار ✅</button>`;
       calcRoute({ lat: parseFloat(localStorage.getItem('carwa_driver_lat')), lng: parseFloat(localStorage.getItem('carwa_driver_lng')) }, currentOrder.dest, true);
     }
@@ -294,6 +490,7 @@
     }
 
     function finishTrip() {
+      db.ref('orders/' + currentOrder.id).off();
       const price = 500 + (tripStats.distanceVal / 1000 * 1000);
       document.getElementById('statDist').innerText = tripStats.distance;
       document.getElementById('statPrice').innerText = Math.round(price).toLocaleString() + " د.ع";
@@ -309,10 +506,12 @@
     }
 
     function initChat(id) {
-      db.ref('chats/' + id).on('child_added', snap => {
+      document.getElementById('chatMsgs').innerHTML = '';
+      db.ref('chats/' + id).limitToLast(20).on('child_added', snap => {
         const m = snap.val();
         const div = document.createElement('div');
-        div.className = `msg ${m.sender === 'driver' ? 'me' : 'other'}`;
+        div.className = 'p-2 mb-2 rounded ' + (m.sender === 'driver' ? 'bg-warning text-white ms-auto' : 'bg-white text-dark me-auto');
+        div.style.maxWidth = "80%";
         div.innerText = m.text;
         document.getElementById('chatMsgs').appendChild(div);
         document.getElementById('chatMsgs').scrollTop = document.getElementById('chatMsgs').scrollHeight;
@@ -338,7 +537,7 @@
         if(u && (new Date() > new Date(u.subscriptionExpiry) || u.isLocked)) {
           document.getElementById('subBlocker').style.display = 'flex';
         } else {
-          initMap();
+          if(typeof google !== 'undefined') initMap(); else window.initMap = initMap;
         }
       });
     }

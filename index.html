@@ -90,26 +90,33 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. إدارة هوية الجهاز
     let deviceId = localStorage.getItem('carwa_device_id');
     if (!deviceId) {
       deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now();
       localStorage.setItem('carwa_device_id', deviceId);
     }
 
-    // 2. التحقق عند التحميل
-    (function checkLogin() {
-        const userType = localStorage.getItem('carwa_user_type');
-        if (userType === 'customer') { window.location.href = "customer.html"; return; }
-        if (userType === 'driver') { window.location.href = "driver.html"; return; }
+    // التحقق السريع من التخزين المحلي أولاً لتسريع الواجهة
+    const cachedType = localStorage.getItem('carwa_user_type');
+    if (cachedType) {
+         if (cachedType === 'customer') window.location.href = "customer.html";
+         else if (cachedType === 'driver') window.location.href = "driver.html";
+    }
 
+    (function checkLogin() {
+        // التحقق من السيرفر كإجراء احتياطي وتحديث للبيانات
         db.ref('devices/' + deviceId).once('value', snap => {
             if (snap.exists()) {
                 const savedData = snap.val();
-                const msgBox = document.getElementById('welcomeBackMsg');
-                msgBox.innerHTML = `مرحباً بك مجدداً <b>${savedData.name}</b><br>سيتم الدخول لحسابك المسجل بهذا الجهاز.`;
-                msgBox.style.display = 'block';
-                window.boundAccount = savedData; 
+                if(savedData.type !== cachedType) { // إذا اختلفت البيانات عن الكاش
+                    const msgBox = document.getElementById('welcomeBackMsg');
+                    msgBox.innerHTML = `مرحباً بك مجدداً <b>${savedData.name}</b><br>سيتم الدخول لحسابك المسجل بهذا الجهاز.`;
+                    msgBox.style.display = 'block';
+                    window.boundAccount = savedData; 
+                    
+                    // إعادة توجيه بعد ثانية واحدة لإظهار الرسالة
+                    setTimeout(() => forceLogin(savedData), 1500);
+                }
             }
             document.body.classList.remove('loading');
         });
@@ -147,9 +154,8 @@
       }
     }
 
-    // دالة التحقق من صحة رقم الهاتف العراقي
     function validateIraqiPhone(phone) {
-        const regex = /^07\d{9}$/; // يبدأ بـ 07 ويتبعه 9 أرقام (المجموع 11)
+        const regex = /^07\d{9}$/; 
         return regex.test(phone);
     }
 
@@ -161,28 +167,23 @@
       }
 
       if (type === 'customer') {
-        // --- تسجيل الزبون ---
         const name = document.getElementById('custName').value.trim();
         const phone = document.getElementById('custPhone').value.trim();
 
         if (!name || !phone) { alert("يرجى ملء جميع الحقول."); return; }
-
         if (!validateIraqiPhone(phone)) {
             alert("يرجى إدخال رقم هاتف عراقي صحيح (يتكون من 11 رقم ويبدأ بـ 07)");
             return;
         }
-
         saveAndRedirect('customer', name, phone, null);
 
       } else {
-        // --- تسجيل السائق (الكابتن) ---
         const name = document.getElementById('drvName').value.trim();
         const phone = document.getElementById('drvPhone').value.trim();
         const photoInput = document.getElementById('drvPhoto');
         const carNum = document.getElementById('drvCarNum').value.trim();
         const carPhotoInput = document.getElementById('drvCarPhoto');
 
-        // التحقق من الحقول الإجبارية للكابتن
         if (!name || !phone || !carNum || !photoInput.files[0] || !carPhotoInput.files[0]) { 
             alert("يرجى ملء جميع الحقول ورفع الصور المطلوبة (الشخصية والسيارة)."); 
             return; 
@@ -193,15 +194,12 @@
             return;
         }
 
-        // قراءة الصور (الشخصية + السيارة)
-        const reader1 = new FileReader(); // للصورة الشخصية
+        const reader1 = new FileReader(); 
         reader1.onload = function(e1) {
             const personalPhotoUrl = e1.target.result;
-            
-            const reader2 = new FileReader(); // لصورة السيارة
+            const reader2 = new FileReader(); 
             reader2.onload = function(e2) {
                 const carPhotoUrl = e2.target.result;
-                // حفظ كل البيانات
                 saveAndRedirect('driver', name, phone, personalPhotoUrl, carNum, carPhotoUrl);
             };
             reader2.readAsDataURL(carPhotoInput.files[0]);
@@ -225,10 +223,9 @@
         localStorage.setItem('carwa_user_phone', phone);
       } 
       else {
-        // بيانات السائق الإضافية
         localStorage.setItem('carwa_driver_name', name);
         localStorage.setItem('carwa_driver_phone', phone);
-        localStorage.setItem('carwa_driver_photo', photoUrl); // تخزين محلي
+        localStorage.setItem('carwa_driver_photo', photoUrl); 
         
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 30);

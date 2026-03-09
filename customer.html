@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>كروة - الزبون</title>
+  <title>كروة 2026 - الزبون</title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -13,8 +13,11 @@
     :root { 
       --primary: #FF6F00; 
       --dark: #2D3436; 
-      --light: #F9F9F9; 
-      --shadow: 0 10px 30px rgba(0,0,0,0.1);
+      --bg-color: #000; 
+      --text-color: #f0f0f0; 
+      --panel-bg: rgba(0,0,0,0.95);
+      --panel-border: #222;
+      --shadow: 0 10px 30px rgba(255, 111, 0, 0.15);
       --bottom-sheet-padding: 20px;
       --btn-height: 50px;
       --btn-font: 1rem;
@@ -27,7 +30,8 @@
       padding: 0; 
       font-family: 'Cairo', sans-serif; 
       overflow: hidden; 
-      background: white;
+      background: var(--bg-color);
+      color: var(--text-color);
       -webkit-tap-highlight-color: transparent;
     }
     
@@ -42,54 +46,55 @@
     
     .logout-btn { 
       position: absolute; 
-      top: 15px; 
-      left: 15px; 
+      top: 12px; 
+      left: 12px; 
       z-index: 10; 
-      background: white; 
-      border: none; 
-      width: 50px; 
-      height: 50px; 
+      background: var(--panel-bg); 
+      border: 1px solid var(--panel-border); 
+      width: 48px; 
+      height: 48px; 
       border-radius: 50%; 
       box-shadow: var(--shadow); 
       color: #dc3545; 
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       transition: transform 0.2s;
     }
     .logout-btn:active { transform: scale(0.9); }
 
     .recenter-btn {
       position: absolute; 
-      bottom: 280px; 
-      right: 15px; 
+      bottom: 275px; 
+      right: 12px; 
       z-index: 10;
-      background: white; 
-      border: none; 
-      width: 55px; 
-      height: 55px;
+      background: var(--panel-bg); 
+      border: 1px solid var(--panel-border); 
+      width: 52px; 
+      height: 52px;
       border-radius: 50%; 
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      color: var(--dark); 
+      box-shadow: 0 4px 15px rgba(255, 111, 0, 0.2);
+      color: var(--primary); 
       display: flex; 
       align-items: center; 
       justify-content: center;
-      font-size: 1.4rem; 
+      font-size: 1.3rem; 
       transition: 0.2s; 
       cursor: pointer;
     }
-    .recenter-btn:active { transform: scale(0.9); color: var(--primary); }
+    .recenter-btn:active { transform: scale(0.9); }
 
     .bottom-sheet { 
       position: fixed; 
       bottom: 0; 
       left: 0; 
       right: 0; 
-      background: white; 
+      background: var(--bg-color); 
       padding: var(--bottom-sheet-padding); 
       border-radius: 25px 25px 0 0; 
-      box-shadow: 0 -5px 40px rgba(0,0,0,0.15); 
+      box-shadow: 0 -5px 40px rgba(255, 111, 0, 0.15); 
+      border-top: 1px solid var(--panel-border);
       z-index: 100; 
       max-width: 100%;
       margin: 0 auto; 
@@ -101,24 +106,27 @@
 
     h5 { 
       font-weight: 800; 
-      color: var(--dark); 
+      color: var(--text-color); 
       margin-bottom: 15px;
       font-size: 1.1rem;
     }
+    .text-muted { color: #999 !important; }
     
     .search-input { 
       border-radius: 14px; 
       padding: 14px 18px; 
-      border: 2px solid #f0f0f0; 
-      background: #fdfdfd; 
+      border: 2px solid var(--panel-border); 
+      background: #111; 
+      color: var(--text-color);
       font-weight: 600;
       font-size: 0.95rem;
     }
     .search-input:focus { 
       border-color: var(--primary); 
-      background: white; 
+      background: #1a1a1a; 
       box-shadow: none; 
     }
+    .search-input::placeholder { color: #666; }
 
     .btn-confirm { 
       border-radius: 14px; 
@@ -168,7 +176,7 @@
     .btn-chat { background: #9b59b6; }
 
     .status-badge { 
-      background: #FFF3E0; 
+      background: rgba(255, 111, 0, 0.2); 
       color: var(--primary); 
       padding: 7px 14px; 
       border-radius: 18px; 
@@ -176,15 +184,16 @@
       font-weight: 700; 
       display: inline-block; 
       margin-bottom: 10px; 
+      border: 1px solid rgba(255, 111, 0, 0.4);
     }
 
     .driver-info-card {
-      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      background: rgba(255, 111, 0, 0.08);
       border-radius: 18px;
       padding: 18px;
       margin-bottom: 12px;
-      border: 2px solid var(--primary);
-      box-shadow: 0 5px 20px rgba(255, 111, 0, 0.2);
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 5px 20px rgba(255, 111, 0, 0.15);
     }
     
     .driver-row {
@@ -192,7 +201,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 10px 0;
-      border-bottom: 1px solid rgba(255, 111, 0, 0.2);
+      border-bottom: 1px solid var(--panel-border);
     }
     .driver-row:last-child { border-bottom: none; }
     
@@ -201,7 +210,7 @@
       align-items: center;
       gap: 10px;
       font-weight: 700;
-      color: var(--dark);
+      color: #bbb;
       font-size: 0.9rem;
     }
     .driver-label i {
@@ -213,12 +222,12 @@
     
     .driver-value {
       font-weight: 800;
-      color: var(--dark);
+      color: var(--text-color);
       font-size: 0.95rem;
     }
     
     .car-plate-box {
-      background: #2D3436;
+      background: var(--dark);
       color: white;
       padding: 7px 18px;
       border-radius: 8px;
@@ -228,42 +237,40 @@
       font-weight: 900;
     }
 
-    /* ⭐ زر الدردشة العائم */
     .chat-float-btn { 
       position: fixed; 
       bottom: 25px; 
       left: 15px; 
       z-index: 90; 
-      width: 55px; 
-      height: 55px; 
+      width: 52px; 
+      height: 52px; 
       border-radius: 50%; 
       background: var(--dark); 
       color: white; 
       border: none; 
-      box-shadow: 0 5px 25px rgba(0,0,0,0.3); 
+      box-shadow: 0 5px 25px rgba(255, 111, 0, 0.3); 
       display: none; 
       align-items: center; 
       justify-content: center; 
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       transition: transform 0.2s;
     }
     .chat-float-btn:active { transform: scale(0.9); }
     
-    /* ⭐ نافذة الدردشة */
     .chat-popup { 
       position: fixed; 
-      bottom: 90px; 
+      bottom: 85px; 
       left: 15px; 
       width: calc(100% - 30px);
       max-width: 320px; 
-      background: white; 
+      background: var(--bg-color); 
       border-radius: 20px; 
       z-index: 100; 
-      box-shadow: 0 10px 45px rgba(0,0,0,0.25); 
+      box-shadow: 0 10px 45px rgba(0,0,0,0.5); 
       display: none; 
       flex-direction: column; 
       overflow: hidden; 
-      border: 1px solid #eee; 
+      border: 1px solid var(--panel-border); 
     }
     .chat-popup-header {
       background: var(--dark); 
@@ -290,7 +297,7 @@
       flex-direction: column; 
       gap: 6px;
       padding: 12px;
-      background: #f8f9fa; 
+      background: #111; 
     }
     .msg { 
       padding: 7px 11px; 
@@ -306,8 +313,8 @@
       border-bottom-right-radius: 2px; 
     }
     .msg.other { 
-      background: #e9ecef; 
-      color: #333; 
+      background: #333; 
+      color: var(--text-color); 
       align-self: flex-end; 
       border-bottom-left-radius: 2px; 
     }
@@ -315,17 +322,20 @@
       display: flex; 
       gap: 6px; 
       padding: 10px;
-      background: white;
-      border-top: 1px solid #eee;
+      background: var(--bg-color);
+      border-top: 1px solid var(--panel-border);
     }
     .chat-input { 
       flex: 1; 
-      border: 1px solid #ddd; 
+      border: 1px solid var(--panel-border); 
       border-radius: 22px; 
       padding: 8px 13px; 
       font-size: 0.85rem; 
       outline: none; 
+      background: #111;
+      color: var(--text-color);
     }
+    .chat-input::placeholder { color: #666; }
     .chat-input-area button {
       width: 42px;
       height: 42px;
@@ -339,7 +349,7 @@
       left: 0; 
       right: 0; 
       bottom: 0; 
-      background: rgba(255,255,255,0.95); 
+      background: rgba(0,0,0,0.95); 
       backdrop-filter: blur(10px); 
       z-index: 200; 
       display: none; 
@@ -348,22 +358,25 @@
       padding: 20px;
     }
     .stats-card { 
-      background: white; 
+      background: var(--bg-color); 
       width: 90%; 
       max-width: 340px; 
       border-radius: 25px; 
       padding: 25px 20px; 
       text-align: center; 
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1); 
+      box-shadow: 0 20px 60px rgba(255, 111, 0, 0.2); 
+      border: 1px solid var(--panel-border);
+      color: var(--text-color);
     }
     .stat-row { 
       display: flex; 
       justify-content: space-between; 
       margin: 8px 0; 
       padding: 8px; 
-      background: #fcfcfc; 
+      background: rgba(255,255,255,0.05); 
       border-radius: 10px;
       font-size: 0.9rem;
+      border: 1px solid var(--panel-border);
     }
     .price-display { 
       font-size: 2rem; 
@@ -379,19 +392,19 @@
         --btn-font: 0.85rem;
         --card-radius: 18px;
       }
-      .logout-btn { width: 45px; height: 45px; font-size: 1.1rem; }
-      .recenter-btn { width: 50px; height: 50px; font-size: 1.2rem; bottom: 260px; }
+      .logout-btn { width: 44px; height: 44px; font-size: 1.1rem; }
+      .recenter-btn { width: 48px; height: 48px; font-size: 1.2rem; bottom: 255px; }
       .btn-confirm, .btn-action { padding: 12px; font-size: 0.85rem; }
       .price-display { font-size: 1.7rem; }
       h5 { font-size: 1rem; }
       .driver-info-card { padding: 15px; }
       .car-plate-box { font-size: 1rem; padding: 6px 14px; }
-      .chat-float-btn { width: 50px; height: 50px; font-size: 1.2rem; }
-      .chat-popup { bottom: 80px; }
+      .chat-float-btn { width: 48px; height: 48px; font-size: 1.2rem; }
+      .chat-popup { bottom: 75px; }
     }
 
     @media (min-width: 768px) {
-      .bottom-sheet { max-width: 550px; }
+      .bottom-sheet { max-width: 420px; }
       .stats-card { max-width: 380px; }
       .chat-popup { max-width: 380px; }
     }
@@ -407,7 +420,7 @@
     }
 
     .bottom-sheet::-webkit-scrollbar { width: 4px; }
-    .bottom-sheet::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+    .bottom-sheet::-webkit-scrollbar-track { background: #222; border-radius: 10px; }
     .bottom-sheet::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
   </style>
 </head>
@@ -419,12 +432,10 @@
     <i class="fas fa-crosshairs"></i>
   </button>
 
-  <!-- ⭐ زر الدردشة العائم -->
   <button id="chatBtn" class="chat-float-btn" onclick="toggleChat()">
     <i class="fas fa-comment-dots"></i>
   </button>
   
-  <!-- ⭐ نافذة الدردشة -->
   <div id="chatWindow" class="chat-popup">
     <div class="chat-popup-header">
       <span><i class="fas fa-user-circle ms-2"></i>الكابتن</span>
@@ -475,8 +486,22 @@
     const savedLng = parseFloat(localStorage.getItem('carwa_last_lng')) || 44.3661;
     const defaultPos = { lat: savedLat, lng: savedLng };
 
+    const darkMapStyle = [
+      { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] },
+      { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] },
+      { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] },
+      { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] },
+      { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] },
+      { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] }
+    ];
+
     function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), { center: defaultPos, zoom: 16, disableDefaultUI: true });
+      map = new google.maps.Map(document.getElementById("map"), { 
+        center: defaultPos, 
+        zoom: 16, 
+        disableDefaultUI: true,
+        styles: darkMapStyle
+      });
       marker = new google.maps.Marker({ map: map, position: defaultPos, draggable: true });
       directionsService = new google.maps.DirectionsService();
       
@@ -560,7 +585,7 @@
             <div class="spinner-border text-warning mb-3" style="width: 2.5rem; height: 2.5rem;"></div>
             <h5>جاري البحث عن كابتن...</h5>
             <p class="text-muted mb-3" style="font-size:0.85rem;">سيتم إشعارك عند العثور على سائق قريب</p>
-            <button class="btn btn-cancel" onclick="cancelOrder()" style="min-height:45px;">إلغاء الطلب</button>
+            <button class="btn btn-outline-danger" onclick="cancelOrder()" style="min-height:45px;">إلغاء الطلب</button>
           </div>`;
       } else if (currentStep === 'tracking') {
         container.innerHTML = `
@@ -577,7 +602,6 @@
       }
     }
 
-    // ⭐ دالة إظهار/إخفاء الدردشة
     function toggleChat() {
       const chatBtn = document.getElementById('chatBtn');
       const chatWindow = document.getElementById('chatWindow');
@@ -660,7 +684,6 @@
           const statusMsg = data.status === 'accepted' ? "الكابتن في الطريق إليك" : "أنت في الرحلة الآن";
           renderUI(statusMsg);
           
-          // ⭐ إظهار زر الدردشة
           document.getElementById('chatBtn').style.display = 'flex';
           
           if(data.driver_location) {
@@ -703,7 +726,6 @@
       }
     }
 
-    // ⭐ تهيئة الدردشة
     function initChat(id) {
       const chatMsgs = document.getElementById('chatMsgs');
       if(chatMsgs) chatMsgs.innerHTML = '';
@@ -720,13 +742,12 @@
       });
     }
 
-    // ⭐ إرسال رسالة
     function sendMsg() {
       const input = document.getElementById('chatInput');
       if(!input || !input.value.trim() || !activeOrderId) return;
       db.ref('chats/' + activeOrderId).push({ 
         sender: 'customer', 
-        text: input.value, 
+        text: input.value.trim(), 
         time: Date.now() 
       });
       input.value = "";

@@ -7,31 +7,77 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #FF6F00; --dark: #2D3436; --light-bg: #fdfdfd; }
-    body { background: var(--light-bg); height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Cairo', sans-serif; margin: 0; background-image: radial-gradient(var(--primary) 0.5px, transparent 0.5px), radial-gradient(var(--primary) 0.5px, var(--light-bg) 0.5px); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+    :root { --primary: #FF6F00; --dark: #2D3436; --light-bg: #000000; }
+    body { background: #000; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Cairo', sans-serif; margin: 0; background-image: radial-gradient(rgba(255, 111, 0, 0.3) 0.5px, transparent 0.5px), radial-gradient(rgba(255, 111, 0, 0.2) 0.5px, transparent 0.5px); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
     body.loading .gate-card { display: none; }
-    .gate-card { background: white; padding: 40px 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(255, 111, 0, 0.15); text-align: center; width: 90%; max-width: 400px; position: relative; overflow-y: auto; max-height: 90vh; border: 1px solid #eee; }
+    body.loading .splash-screen { display: flex; }
+    
+    /* شاشة الترحيب (Splash Screen) */
+    .splash-screen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: splashFadeOut 0.5s ease-out 2s forwards;
+    }
+    .splash-screen .splash-logo {
+      max-width: 220px;
+      width: 70%;
+      height: auto;
+      animation: splashPulse 1.2s ease-in-out infinite;
+    }
+    .splash-screen .splash-text {
+      color: var(--primary);
+      font-weight: 900;
+      font-size: 1.8rem;
+      margin-top: 20px;
+      letter-spacing: -1px;
+    }
+    @keyframes splashPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.95; }
+    }
+    @keyframes splashFadeOut {
+      to { opacity: 0; pointer-events: none; visibility: hidden; }
+    }
+    
+    .gate-card { background: #000; padding: 40px 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(255, 111, 0, 0.15); text-align: center; width: 90%; max-width: 400px; position: relative; overflow-y: auto; max-height: 90vh; border: 1px solid #222; }
+    .gate-card .page-logo { max-width: 140px; height: auto; margin-bottom: 15px; }
     h2 { color: var(--primary); font-weight: 900; letter-spacing: -1px; font-size: 2.2rem; }
-    .subtitle { color: #888; font-size: 0.95rem; margin-bottom: 30px; font-weight: 600; }
+    .subtitle { color: #999; font-size: 0.95rem; margin-bottom: 30px; font-weight: 600; }
     .btn-choice { width: 100%; margin: 15px 0; padding: 15px; border-radius: 18px; font-weight: 700; border: none; transition: 0.2s; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
     .btn-customer { background: var(--dark); color: white; }
     .btn-driver { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(255, 111, 0, 0.3); }
     .btn-choice:active { transform: scale(0.96); }
     .form-section { display: none; text-align: right; margin-top: 10px; animation: slideUp 0.3s; }
-    .form-label { font-weight: 700; font-size: 0.9rem; color: #555; margin-bottom: 5px; display: block; }
-    .form-control { border-radius: 15px; padding: 12px; margin-bottom: 15px; border: 2px solid #f0f0f0; background: #fafafa; font-family: 'Cairo', sans-serif; font-weight: 600; }
-    .form-control:focus { border-color: var(--primary); background: white; box-shadow: none; }
-    .back-btn { cursor: pointer; color: #aaa; font-size: 0.85rem; margin-bottom: 15px; display: inline-block; font-weight: 700; }
+    .form-label { font-weight: 700; font-size: 0.9rem; color: #bbb; margin-bottom: 5px; display: block; }
+    .form-control { border-radius: 15px; padding: 12px; margin-bottom: 15px; border: 2px solid #333; background: #000; color: #fff; font-family: 'Cairo', sans-serif; font-weight: 600; }
+    .form-control:focus { border-color: var(--primary); background: #111; color: #fff; box-shadow: none; }
+    .form-control::placeholder { color: #666; }
+    .back-btn { cursor: pointer; color: #888; font-size: 0.85rem; margin-bottom: 15px; display: inline-block; font-weight: 700; }
     
-    #welcomeBackMsg { display: none; background: #e3f2fd; color: #0d6efd; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
+    #welcomeBackMsg { display: none; background: #000; color: #64b5f6; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; border: 1px solid #333; }
 
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body class="loading"> 
 
+  <!-- شاشة الترحيب (Splash Screen) -->
+  <div class="splash-screen">
+    <img src="assets/logo.png" alt="كروة" class="splash-logo">
+    <span class="splash-text">كروة 2026</span>
+  </div>
+
   <div class="gate-card">
-    <div style="font-size: 3.5rem; margin-bottom: 5px;">🚕</div>
+    <img src="assets/logo.png" alt="كروة" class="page-logo">
     <h2 class="mb-1">كروة 2026</h2>
     <p class="subtitle">وجهتك التالية.. تبدأ من هنا</p>
 
@@ -44,7 +90,7 @@
 
     <div id="customer-form" class="form-section">
       <div class="back-btn" onclick="goBack()">عودة للقائمة الرئيسية</div>
-      <h5 class="mb-3 fw-bold text-dark">حساب زبون جديد</h5>
+      <h5 class="mb-3 fw-bold text-white">حساب زبون جديد</h5>
       
       <label class="form-label">الاسم الكامل *</label>
       <input type="text" id="custName" class="form-control" placeholder="الاسم الثلاثي">
@@ -57,7 +103,7 @@
 
     <div id="driver-form" class="form-section">
       <div class="back-btn" onclick="goBack()">عودة للقائمة الرئيسية</div>
-      <h5 class="mb-3 fw-bold text-dark">تسجيل كابتن جديد</h5>
+      <h5 class="mb-3 fw-bold text-white">تسجيل كابتن جديد</h5>
       
       <label class="form-label">اسم الكابتن *</label>
       <input type="text" id="drvName" class="form-control" placeholder="الاسم الثلاثي">

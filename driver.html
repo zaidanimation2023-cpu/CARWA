@@ -10,89 +10,424 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    :root { --primary: #FF6F00; --dark: #2D3436; --bg-color: white; --text-color: #2D3436; --panel-bg: rgba(255,255,255,0.95); }
-    body.dark-mode { --bg-color: #1a1a1a; --text-color: #f0f0f0; --panel-bg: rgba(30,30,30,0.95); }
-    body, html { height: 100%; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; overflow: hidden; background: var(--bg-color); color: var(--text-color); transition: 0.3s; }
-    #map { height: 100vh; width: 100%; position: absolute; top:0; left:0; z-index: 1; }
-
-    .theme-btn { position: absolute; top: 20px; left: 20px; z-index: 20; background: var(--panel-bg); width: 45px; height: 45px; border-radius: 50%; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: var(--text-color); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; backdrop-filter: blur(5px); }
-    .recenter-btn { position: absolute; bottom: 120px; right: 20px; z-index: 10; background: var(--panel-bg); border: none; width: 55px; height: 55px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: var(--text-color); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: 0.2s; cursor: pointer; pointer-events: auto; }
-    .recenter-btn.active { color: var(--primary); border: 2px solid var(--primary); }
-
-    .ui-top { position: relative; z-index: 10; padding: 20px; pointer-events: none; }
-    .panel-info { background: var(--panel-bg); backdrop-filter: blur(10px); padding: 15px 20px; border-radius: 20px; pointer-events: auto; max-width: 450px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); margin: 0 auto; border: 1px solid rgba(0,0,0,0.05); }
+    :root { 
+      --primary: #FF6F00; 
+      --dark: #2D3436; 
+      --bg-color: white; 
+      --text-color: #2D3436; 
+      --panel-bg: rgba(255,255,255,0.95);
+      --panel-padding: 15px;
+      --btn-height: 50px;
+      --btn-font: 1rem;
+    }
     
-    h6 { font-weight: 800; color: var(--primary); margin: 0; font-size: 1rem; }
-    .btn-logout { border: 1px solid #dc3545; color: #dc3545; background: transparent; border-radius: 12px; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; }
+    body.dark-mode { 
+      --bg-color: #1a1a1a; 
+      --text-color: #f0f0f0; 
+      --panel-bg: rgba(30,30,30,0.95); 
+    }
     
-    #statusPanel { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 0.9rem; font-weight: 600; color: #777; }
-    body.dark-mode #statusPanel { border-top-color: rgba(255,255,255,0.1); color: #aaa; }
+    body, html { 
+      height: 100%; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Cairo', sans-serif; 
+      overflow: hidden; 
+      background: var(--bg-color); 
+      color: var(--text-color); 
+      transition: 0.3s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    #map { 
+      height: 100vh; 
+      width: 100%; 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      z-index: 1; 
+    }
 
-    .trip-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-    .btn-action { width: 100%; font-weight: 800; border-radius: 12px; padding: 12px; font-size: 0.95rem; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: 0.2s; }
+    .theme-btn { 
+      position: absolute; 
+      top: 15px; 
+      left: 15px; 
+      z-index: 20; 
+      background: var(--panel-bg); 
+      width: 50px; 
+      height: 50px; 
+      border-radius: 50%; 
+      border: none; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+      color: var(--text-color); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 1.3rem; 
+      cursor: pointer; 
+      backdrop-filter: blur(5px);
+      transition: transform 0.2s;
+    }
+    .theme-btn:active { transform: scale(0.9); }
+
+    .recenter-btn { 
+      position: absolute; 
+      bottom: 100px; 
+      right: 15px; 
+      z-index: 10; 
+      background: var(--panel-bg); 
+      border: none; 
+      width: 60px; 
+      height: 60px; 
+      border-radius: 50%; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+      color: var(--text-color); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 1.5rem; 
+      transition: 0.2s; 
+      cursor: pointer; 
+      pointer-events: auto;
+    }
+    .recenter-btn:active { transform: scale(0.9); }
+    .recenter-btn.active { color: var(--primary); border: 3px solid var(--primary); }
+
+    .ui-top { 
+      position: relative; 
+      z-index: 10; 
+      padding: 15px; 
+      pointer-events: none; 
+    }
+    
+    .panel-info { 
+      background: var(--panel-bg); 
+      backdrop-filter: blur(10px); 
+      padding: var(--panel-padding); 
+      border-radius: 20px; 
+      pointer-events: auto; 
+      max-width: 100%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
+      margin: 0 auto; 
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    h6 { 
+      font-weight: 800; 
+      color: var(--primary); 
+      margin: 0; 
+      font-size: 1rem; 
+    }
+    
+    .btn-logout { 
+      border: 1px solid #dc3545; 
+      color: #dc3545; 
+      background: transparent; 
+      border-radius: 10px; 
+      font-size: 0.75rem; 
+      font-weight: 700; 
+      padding: 6px 14px; 
+      white-space: nowrap;
+    }
+    
+    #statusPanel { 
+      margin-top: 10px; 
+      padding-top: 10px; 
+      border-top: 1px solid rgba(0,0,0,0.1); 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      color: #777; 
+    }
+    body.dark-mode #statusPanel { 
+      border-top-color: rgba(255,255,255,0.1); 
+      color: #aaa; 
+    }
+
+    .trip-actions { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 10px; 
+      margin-top: 12px; 
+    }
+    
+    .btn-action { 
+      width: 100%; 
+      font-weight: 800; 
+      border-radius: 12px; 
+      padding: 14px; 
+      font-size: 0.9rem; 
+      border: none; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+      transition: 0.2s;
+      min-height: var(--btn-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-action:active { transform: scale(0.97); }
     .btn-start { background: var(--primary); color: white; grid-column: span 2; }
     .btn-finish { background: #2ecc71; color: white; grid-column: span 2; }
     .btn-call { background: #3498db; color: white; }
     .btn-cancel { background: #e74c3c; color: white; }
     
-    .btn-accept-map { background: var(--primary); color: white; border: none; font-weight: 700; border-radius: 8px; padding: 8px; font-size: 0.9rem; flex: 1; }
-    .btn-reject-map { background: #e74c3c; color: white; border: none; font-weight: 700; border-radius: 8px; padding: 8px; font-size: 0.9rem; flex: 1; }
-    .order-stat-row { display: flex; justify-content: space-around; background: #f8f9fa; padding: 8px; border-radius: 8px; margin: 10px 0; font-size: 0.85rem; }
+    .btn-accept-map { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      font-weight: 700; 
+      border-radius: 8px; 
+      padding: 10px; 
+      font-size: 0.9rem; 
+      flex: 1;
+      min-height: 45px;
+    }
+    .btn-reject-map { 
+      background: #e74c3c; 
+      color: white; 
+      border: none; 
+      font-weight: 700; 
+      border-radius: 8px; 
+      padding: 10px; 
+      font-size: 0.9rem; 
+      flex: 1;
+      min-height: 45px;
+    }
+    
+    .order-stat-row { 
+      display: flex; 
+      justify-content: space-around; 
+      background: #f8f9fa; 
+      padding: 10px; 
+      border-radius: 8px; 
+      margin: 10px 0; 
+      font-size: 0.85rem; 
+    }
     .stat-item { display: flex; flex-direction: column; align-items: center; color: #555; }
     .stat-val { font-weight: 900; color: var(--dark); font-size: 1rem; }
 
-    .subscription-blocker { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
-    .sub-input { text-align: center; font-size: 1.8rem; letter-spacing: 5px; border: 2px solid #eee; border-radius: 15px; padding: 15px; width: 100%; max-width: 320px; margin: 20px 0; outline: none; background: var(--bg-color); color: var(--text-color); }
-    .btn-unlock { background: var(--dark); color: white; width: 100%; max-width: 320px; padding: 15px; border-radius: 15px; font-weight: bold; border: none; }
+    .subscription-blocker { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: var(--bg-color); 
+      z-index: 9999; 
+      display: none; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      text-align: center; 
+      padding: 20px; 
+    }
+    .sub-input { 
+      text-align: center; 
+      font-size: 1.5rem; 
+      letter-spacing: 5px; 
+      border: 2px solid #eee; 
+      border-radius: 15px; 
+      padding: 15px; 
+      width: 100%; 
+      max-width: 280px; 
+      margin: 20px 0; 
+      outline: none; 
+      background: var(--bg-color); 
+      color: var(--text-color); 
+    }
+    .btn-unlock { 
+      background: var(--dark); 
+      color: white; 
+      width: 100%; 
+      max-width: 280px; 
+      padding: 15px; 
+      border-radius: 15px; 
+      font-weight: bold; 
+      border: none; 
+      font-size: 1rem;
+    }
 
-    .chat-float-btn { position: fixed; bottom: 35px; left: 25px; z-index: 90; width: 60px; height: 60px; border-radius: 50%; background: var(--dark); color: white; border: none; box-shadow: 0 5px 25px rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; font-size: 1.5rem; }
-    .chat-popup { position: fixed; bottom: 105px; left: 25px; width: 330px; max-width: 90vw; background: white; border-radius: 20px; z-index: 100; box-shadow: 0 10px 45px rgba(0,0,0,0.25); display: none; flex-direction: column; overflow: hidden; border: 1px solid #eee; }
-    .chat-input { width: calc(100% - 60px); padding: 12px 15px; border: none; border-top: 1px solid #eee; outline: none; background: #f8f9fa; }
-    .chat-footer { display: flex; padding: 10px; background: white; border-top: 1px solid #eee; }
-    .chat-footer button { width: 50px; height: 50px; margin-right: 10px; }
-    .stats-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 200; display: none; justify-content: center; align-items: center; }
-    .stats-card { background: white; width: 90%; max-width: 380px; border-radius: 30px; padding: 40px 30px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.3); }
-    .price-display { font-size: 2.5rem; color: var(--primary); font-weight: 900; margin: 20px 0; }
-    .gm-style .gm-style-iw { font-family: 'Cairo', sans-serif !important; padding: 0 !important; overflow: hidden !important; border-radius: 12px !important; }
+    .chat-float-btn { 
+      position: fixed; 
+      bottom: 25px; 
+      left: 15px; 
+      z-index: 90; 
+      width: 55px; 
+      height: 55px; 
+      border-radius: 50%; 
+      background: var(--dark); 
+      color: white; 
+      border: none; 
+      box-shadow: 0 5px 25px rgba(0,0,0,0.3); 
+      display: none; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 1.3rem;
+    }
     
-    /* ⭐ نافذة إعدادات السيارة */
+    .chat-popup { 
+      position: fixed; 
+      bottom: 90px; 
+      left: 15px; 
+      width: calc(100% - 30px);
+      max-width: 350px; 
+      background: white; 
+      border-radius: 20px; 
+      z-index: 100; 
+      box-shadow: 0 10px 45px rgba(0,0,0,0.25); 
+      display: none; 
+      flex-direction: column; 
+      overflow: hidden; 
+      border: 1px solid #eee; 
+    }
+    .chat-input { 
+      width: calc(100% - 55px); 
+      padding: 12px 15px; 
+      border: none; 
+      border-top: 1px solid #eee; 
+      outline: none; 
+      background: #f8f9fa; 
+      font-size: 0.9rem;
+    }
+    .chat-footer { 
+      display: flex; 
+      padding: 10px; 
+      background: white; 
+      border-top: 1px solid #eee; 
+    }
+    .chat-footer button { 
+      width: 45px; 
+      height: 45px; 
+      margin-right: 10px; 
+      font-size: 1.1rem;
+    }
+
+    .stats-overlay { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      bottom: 0; 
+      background: rgba(0,0,0,0.8); 
+      backdrop-filter: blur(8px); 
+      z-index: 200; 
+      display: none; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 20px;
+    }
+    .stats-card { 
+      background: white; 
+      width: 90%; 
+      max-width: 350px; 
+      border-radius: 25px; 
+      padding: 30px 25px; 
+      text-align: center; 
+      box-shadow: 0 15px 50px rgba(0,0,0,0.3); 
+    }
+    .price-display { 
+      font-size: 2rem; 
+      color: var(--primary); 
+      font-weight: 900; 
+      margin: 20px 0; 
+    }
+
     .car-settings-modal {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
-      z-index: 9998; display: none; justify-content: center; align-items: center;
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%;
+      background: rgba(0,0,0,0.7); 
+      backdrop-filter: blur(5px);
+      z-index: 9998; 
+      display: none; 
+      justify-content: center; 
+      align-items: center;
+      padding: 20px;
     }
     .car-settings-card {
-      background: white; width: 90%; max-width: 400px;
-      border-radius: 25px; padding: 30px; text-align: center;
+      background: white; 
+      width: 100%; 
+      max-width: 350px;
+      border-radius: 25px; 
+      padding: 25px; 
+      text-align: center;
     }
     .car-input {
-      width: 100%; padding: 15px; border: 2px solid #eee;
-      border-radius: 12px; font-size: 1.1rem; font-weight: 700;
-      text-align: center; margin: 15px 0; outline: none;
+      width: 100%; 
+      padding: 15px; 
+      border: 2px solid #eee;
+      border-radius: 12px; 
+      font-size: 1rem; 
+      font-weight: 700;
+      text-align: center; 
+      margin: 15px 0; 
+      outline: none;
     }
     .car-input:focus { border-color: var(--primary); }
     .btn-save-car {
-      background: var(--primary); color: white; width: 100%;
-      padding: 15px; border-radius: 12px; font-weight: 800;
-      border: none; font-size: 1rem;
+      background: var(--primary); 
+      color: white; 
+      width: 100%;
+      padding: 15px; 
+      border-radius: 12px; 
+      font-weight: 800;
+      border: none; 
+      font-size: 1rem;
+    }
+
+    .gm-style .gm-style-iw { 
+      font-family: 'Cairo', sans-serif !important; 
+      padding: 0 !important; 
+      overflow: hidden !important; 
+      border-radius: 12px !important; 
+      max-width: 280px !important;
+    }
+
+    @media (max-width: 360px) {
+      :root {
+        --panel-padding: 12px;
+        --btn-height: 45px;
+        --btn-font: 0.85rem;
+      }
+      .theme-btn { width: 45px; height: 45px; font-size: 1.1rem; }
+      .recenter-btn { width: 55px; height: 55px; font-size: 1.3rem; bottom: 90px; }
+      .btn-action { padding: 12px; font-size: 0.85rem; }
+      .price-display { font-size: 1.8rem; }
+      h6 { font-size: 0.9rem; }
+    }
+
+    @media (min-width: 768px) {
+      .panel-info { max-width: 500px; }
+      .chat-popup { max-width: 400px; }
+      .stats-card { max-width: 400px; }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .btn-action, .btn-accept-map, .btn-reject-map, .btn-unlock, .btn-save-car {
+        min-height: 50px;
+      }
+      .theme-btn, .recenter-btn, .chat-float-btn {
+        min-width: 50px;
+        min-height: 50px;
+      }
     }
   </style>
 </head>
 <body>
 
   <div id="subBlocker" class="subscription-blocker">
-    <i class="fas fa-id-card-alt fa-4x text-danger mb-4"></i>
+    <i class="fas fa-id-card-alt fa-3x text-danger mb-3"></i>
     <h3 class="fw-bold mb-2">الحساب مقيد</h3>
     <input type="number" id="pinInput" class="sub-input" placeholder="000000">
     <button class="btn-unlock" onclick="redeemPin()">تفعيل الآن</button>
   </div>
 
-  <!-- ⭐ نافذة إعدادات رقم السيارة -->
   <div id="carSettingsModal" class="car-settings-modal">
     <div class="car-settings-card">
       <i class="fas fa-car-side fa-3x text-warning mb-3"></i>
       <h4 class="fw-bold mb-2">بيانات السيارة</h4>
-      <p class="text-muted mb-3">أدخل رقم لوحة سيارتك ليظهر للزبون</p>
+      <p class="text-muted mb-3" style="font-size: 0.9rem;">أدخل رقم لوحة سيارتك ليظهر للزبون</p>
       <input type="text" id="carPlateInput" class="car-input" placeholder="مثال: بغداد 12345">
       <button class="btn-save-car" onclick="saveCarPlate()">حفظ ومتابعة</button>
     </div>
@@ -128,10 +463,11 @@
   <button id="chatBtn" class="chat-float-btn" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
   
   <div id="chatWindow" class="chat-popup">
-    <div style="background:var(--dark); color:white; padding:15px; display:flex; justify-content:space-between;">
-      <span>الزبون</span><button class="btn btn-sm text-white" onclick="toggleChat()">×</button>
+    <div style="background:var(--dark); color:white; padding:12px 15px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:700;">الزبون</span>
+      <button class="btn btn-sm text-white p-0" onclick="toggleChat()" style="width:30px;height:30px;"><i class="fas fa-times"></i></button>
     </div>
-    <div class="chat-msgs" id="chatMsgs" style="height:260px; overflow-y:auto; padding:15px; background:#f8f9fa;"></div>
+    <div class="chat-msgs" id="chatMsgs" style="height:200px; overflow-y:auto; padding:15px; background:#f8f9fa;"></div>
     <div class="chat-footer">
       <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة...">
       <button class="btn btn-warning rounded-circle" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
@@ -140,10 +476,10 @@
 
   <div class="stats-overlay" id="statsOverlay">
     <div class="stats-card">
-      <h3 class="fw-bold mb-3 text-dark">نهاية الرحلة ✅</h3>
-      <div class="mb-2 text-muted">المسافة</div>
+      <h3 class="fw-bold mb-3 text-dark" style="font-size:1.3rem;">نهاية الرحلة ✅</h3>
+      <div class="mb-2 text-muted" style="font-size:0.85rem;">المسافة</div>
       <div id="statDist" class="fw-bold fs-4 text-dark">--</div>
-      <div class="mt-4 text-muted">المبلغ المستحق</div>
+      <div class="mt-4 text-muted" style="font-size:0.85rem;">المبلغ المستحق</div>
       <div class="price-display" id="statPrice">0 د.ع</div>
       <button class="btn btn-dark w-100 mt-3 py-3 rounded-4 fw-bold" onclick="location.reload()">استلام وإنهاء</button>
     </div>
@@ -172,7 +508,6 @@
 
     const driverName = localStorage.getItem('carwa_driver_name') || "كابتن";
     const driverPhone = localStorage.getItem('carwa_driver_phone');
-    // ⭐ جلب رقم اللوحة من localStorage
     let carPlate = localStorage.getItem('carwa_driver_carplate') || "";
     
     document.getElementById('driverTitle').innerText = driverName;
@@ -181,14 +516,15 @@
       try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
     }
 
-    // ⭐ دالة إنشاء أيقونة سيارة قابلة للدوران
+    // ⭐ دالة إنشاء أيقونة السيارة مع الدوران - صورة سيارة حقيقية
     function createCarIcon(rotation = 0) {
       return {
-        url: "https://cdn-icons-png.flaticon.com/512/3097/3097180.png",
-        scaledSize: new google.maps.Size(50, 50),
-        anchor: new google.maps.Point(25, 25),
+        // صورة سيارة من الأمام (تتجه للأعلى بشكل افتراضي)
+        url: "https://cdn-icons-png.flaticon.com/512/3202/3202926.png",
+        scaledSize: new google.maps.Size(45, 45),
+        anchor: new google.maps.Point(22.5, 22.5),
         rotation: rotation,
-        labelOrigin: new google.maps.Point(25, 25)
+        labelOrigin: new google.maps.Point(22.5, 22.5)
       };
     }
 
@@ -199,6 +535,7 @@
       
       let avgHeading = headingHistory.reduce((a, b) => a + b, 0) / headingHistory.length;
       
+      // معالجة الانتقال بين 0 و 360 درجة
       if (Math.abs(avgHeading - currentHeading) > 180) {
         if (avgHeading > currentHeading) avgHeading -= 360;
         else avgHeading += 360;
@@ -228,7 +565,7 @@
       };
 
       map = new google.maps.Map(document.getElementById("map"), {
-        center: savedPos, zoom: 14, disableDefaultUI: true,
+        center: savedPos, zoom: 16, disableDefaultUI: true,
         styles: lightStyle, tilt: 0, heading: 0
       });
 
@@ -240,17 +577,18 @@
       directionsService = new google.maps.DirectionsService();
       solidRenderer = new google.maps.DirectionsRenderer({ 
         map: map, suppressMarkers: true, 
-        polylineOptions: { strokeColor: "#FF6F00", strokeWeight: 7, strokeOpacity: 0.9 } 
+        polylineOptions: { strokeColor: "#FF6F00", strokeWeight: 6, strokeOpacity: 0.9 } 
       });
 
+      // ⭐ إنشاء علامة السيارة مع أيقونة قابلة للدوران
       driverMarker = new google.maps.Marker({
         position: savedPos, 
         map: map,
         icon: createCarIcon(0),
-        title: driverName
+        title: driverName,
+        zIndex: 1000
       });
 
-      // ⭐ عرض نافذة إعدادات السيارة إذا لم تكن محفوظة
       if (!carPlate) {
         document.getElementById('carSettingsModal').style.display = 'flex';
       }
@@ -260,7 +598,6 @@
       document.addEventListener('click', requestWakeLock);
     }
 
-    // ⭐ حفظ رقم لوحة السيارة
     function saveCarPlate() {
       const input = document.getElementById('carPlateInput').value.trim();
       if (!input) {
@@ -287,7 +624,7 @@
       if (lat && lng) {
         const latLng = new google.maps.LatLng(lat, lng);
         map.panTo(latLng);
-        map.setZoom(currentOrder ? 19 : 17);
+        map.setZoom(currentOrder ? 17 : 16);
       }
     }
 
@@ -298,7 +635,7 @@
       var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c * 1000;
     }
 
-    // ⭐ تتبع GPS مع دعم دوران السيارة
+    // ⭐ تتبع GPS مع تحديث دوران السيارة
     function startGpsTracking() {
       if (navigator.geolocation) {
         navigator.geolocation.watchPosition(pos => {
@@ -309,6 +646,7 @@
           
           let heading = pos.coords.heading;
           
+          // إذا لم يتوفر heading من GPS، نحسبه من الموقعين السابق والحالي
           if (heading === null || heading === undefined || speed < 0.5) {
             if (lastLat !== 0 && lastLng !== 0) {
               heading = calculateHeading(lastLat * Math.PI/180, lastLng * Math.PI/180, lat * Math.PI/180, lng * Math.PI/180);
@@ -327,16 +665,16 @@
           const latLng = new google.maps.LatLng(lat, lng);
           if (driverMarker) {
             driverMarker.setPosition(latLng);
-            updateCarRotation(heading);
+            updateCarRotation(heading);  // ⭐ تحديث دوران السيارة
           }
 
           if (isAutoFollow) {
             map.panTo(latLng);
             if (currentOrder) { 
-              map.setZoom(19); 
-              map.setTilt(55); 
+              map.setZoom(17); 
+              map.setTilt(45); 
               if (heading !== null && heading !== undefined) {
-                map.setHeading(heading);
+                map.setHeading(heading);  // ⭐ تدوير الخريطة مع السيارة
               }
             }
           }
@@ -424,7 +762,6 @@
       });
     }
 
-    // ⭐ دالة قبول الطلب - إرسال بيانات السائق الكاملة
     function acceptOrder(id) {
       db.ref('orders/' + id).once('value').then(snap => {
         const oData = snap.val();
@@ -433,12 +770,11 @@
         isAutoFollow = true;
         document.getElementById('recenterBtn').classList.add('active');
         
-        // ⭐ إرسال بيانات السائق الكاملة بما فيها رقم اللوحة
         db.ref('orders/' + id).update({ 
           status: 'accepted', 
           driver: driverName, 
           driverPhone: driverPhone,
-          carPlate: carPlate || 'غير محدد'  // ⭐ رقم اللوحة
+          carPlate: carPlate || 'غير محدد'
         });
         
         for(let k in markers) markers[k].setMap(null); markers = {};

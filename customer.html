@@ -39,7 +39,8 @@
     }
     
     #map { 
-      height: 100vh; 
+      height: 100%; 
+      min-height: 100vh;
       width: 100%; 
       position: absolute; 
       top: 0; 
@@ -261,6 +262,17 @@
       transition: transform 0.2s;
     }
     .chat-float-btn:active { transform: scale(0.9); }
+    .chat-float-btn.has-unread::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ff5252;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.4);
+    }
     
     .chat-popup { 
       position: fixed; 
@@ -270,7 +282,7 @@
       max-width: 320px; 
       background: var(--bg-color); 
       border-radius: 20px; 
-      z-index: 100; 
+      z-index: 160; 
       box-shadow: 0 10px 45px rgba(0,0,0,0.5); 
       display: none; 
       flex-direction: column; 
@@ -405,7 +417,7 @@
       .driver-info-card { padding: 15px; }
       .car-plate-box { font-size: 1rem; padding: 6px 14px; }
       .chat-float-btn { width: 48px; height: 48px; font-size: 1.2rem; }
-      .chat-popup { bottom: 75px; }
+      .chat-popup { bottom: 80px; left: 10px; width: calc(100% - 20px); }
     }
 
     @media (min-width: 768px) {
@@ -459,6 +471,7 @@
 
   <audio id="arriveSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
   <audio id="driverFoundSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+  <audio id="chatSound" src="https://assets.mixkit.co/active_storage/sfx/1717/1717-preview.mp3"></audio>
 
   <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
   <div class="bottom-sheet" id="ui-container"></div>
@@ -486,6 +499,7 @@
     let currentStep = 'pickup', pickupPos, destPos, activeOrderId = null, driverData = null;
     let lastRenderStatus = '';
     let orderRef = null;
+    let unreadChat = 0;
     const customerName = localStorage.getItem('carwa_user_name') || "عميل";
     const customerPhone = localStorage.getItem('carwa_user_phone') || "";
     
@@ -629,6 +643,8 @@
       if (chatWindow.style.display === 'flex') {
         chatWindow.style.display = 'none';
         chatBtn.style.display = 'flex';
+        unreadChat = 0;
+        chatBtn.classList.remove('has-unread');
       } else {
         chatWindow.style.display = 'flex';
         chatBtn.style.display = 'none';
@@ -770,9 +786,11 @@
       if (window._chatInitId === id) return;
       window._chatInitId = id;
       const chatMsgs = document.getElementById('chatMsgs');
+      const chatBtn = document.getElementById('chatBtn');
+      const chatWindow = document.getElementById('chatWindow');
       if(chatMsgs) chatMsgs.innerHTML = '';
       
-      db.ref('chats/' + id).limitToLast(20).on('child_added', snap => {
+      db.ref('chats/' + id).limitToLast(50).on('child_added', snap => {
         const m = snap.val();
         const div = document.createElement('div');
         div.className = `msg ${m.sender === 'customer' ? 'me' : 'other'}`;
@@ -780,6 +798,14 @@
         if(chatMsgs) {
           chatMsgs.appendChild(div);
           chatMsgs.scrollTop = chatMsgs.scrollHeight;
+        }
+        // تنبيه عند رسائل الكابتن الجديدة
+        if (m.sender !== 'customer' && chatWindow.style.display !== 'flex') {
+          unreadChat += 1;
+          if (chatBtn) chatBtn.classList.add('has-unread');
+          const cs = document.getElementById('chatSound');
+          cs && cs.play().catch(()=>{});
+          if (navigator.vibrate) navigator.vibrate(80);
         }
       });
     }

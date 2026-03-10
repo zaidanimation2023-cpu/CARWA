@@ -44,7 +44,8 @@
     }
     
     #map { 
-      height: 100vh; 
+      height: 100%; 
+      min-height: 100vh;
       width: 100%; 
       position: absolute; 
       top: 0; 
@@ -266,6 +267,19 @@
       align-items: center; 
       justify-content: center; 
       font-size: 1.2rem;
+      transition: transform 0.2s;
+    }
+    .chat-float-btn:active { transform: scale(0.9); }
+    .chat-float-btn.has-unread::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ff5252;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.4);
     }
     
     .chat-popup { 
@@ -276,7 +290,7 @@
       max-width: 350px; 
       background: var(--bg-color); 
       border-radius: 20px; 
-      z-index: 100; 
+      z-index: 160; 
       box-shadow: 0 10px 45px rgba(0,0,0,0.5); 
       display: none; 
       flex-direction: column; 
@@ -408,6 +422,7 @@
       .btn-action { padding: 12px; font-size: 0.85rem; }
       .price-display { font-size: 1.8rem; }
       h6 { font-size: 0.9rem; }
+      .chat-popup { bottom: 80px; left: 10px; width: calc(100% - 20px); }
     }
 
     @media (min-width: 768px) {
@@ -453,6 +468,7 @@
 
   <audio id="orderSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
   <audio id="cancelSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+  <audio id="chatSound" src="https://assets.mixkit.co/active_storage/sfx/1717/1717-preview.mp3"></audio>
 
   <div class="ui-top">
     <div class="panel-info" id="mainPanel">
@@ -517,6 +533,7 @@
     const FIREBASE_UPDATE_INTERVAL = 3000;
     let lastHeading = 0;
     let headingHistory = [];
+    let unreadChat = 0;
 
     const lightStyle = [];
     const darkStyle = [ { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] }, { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] }, { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] } ];
@@ -855,15 +872,27 @@
     function initChat(id) {
       if (window._driverChatId === id) return;
       window._driverChatId = id;
-      document.getElementById('chatMsgs').innerHTML = '';
-      db.ref('chats/' + id).limitToLast(20).on('child_added', snap => {
+      const chatMsgs = document.getElementById('chatMsgs');
+      const chatBtn = document.getElementById('chatBtn');
+      const chatWindow = document.getElementById('chatWindow');
+      if (chatMsgs) chatMsgs.innerHTML = '';
+      db.ref('chats/' + id).limitToLast(50).on('child_added', snap => {
         const m = snap.val();
         const div = document.createElement('div');
         div.className = 'p-2 mb-2 rounded ' + (m.sender === 'driver' ? 'bg-warning text-dark ms-auto' : 'bg-secondary text-white me-auto');
         div.style.maxWidth = "80%";
         div.innerText = m.text;
-        document.getElementById('chatMsgs').appendChild(div);
-        document.getElementById('chatMsgs').scrollTop = document.getElementById('chatMsgs').scrollHeight;
+        if (chatMsgs) {
+          chatMsgs.appendChild(div);
+          chatMsgs.scrollTop = chatMsgs.scrollHeight;
+        }
+        if (m.sender !== 'driver' && chatWindow.style.display !== 'flex') {
+          unreadChat += 1;
+          if (chatBtn) chatBtn.classList.add('has-unread');
+          const cs = document.getElementById('chatSound');
+          cs && cs.play().catch(()=>{});
+          if (navigator.vibrate) navigator.vibrate(80);
+        }
       });
     }
 
@@ -876,7 +905,16 @@
 
     function toggleChat() {
       const win = document.getElementById('chatWindow');
-      win.style.display = (win.style.display === 'flex') ? 'none' : 'flex';
+      const btn = document.getElementById('chatBtn');
+      if (win.style.display === 'flex') {
+        win.style.display = 'none';
+        unreadChat = 0;
+        btn && btn.classList.remove('has-unread');
+      } else {
+        win.style.display = 'flex';
+        btn && btn.classList.remove('has-unread');
+        unreadChat = 0;
+      }
     }
 
     function checkSubscription() {

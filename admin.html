@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>لوحة المدير - كروة برو</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root { --primary: #FF6F00; --dark: #2D3436; --light-bg: #f4f6f9; }
+    body { background-color: var(--light-bg); font-family: 'Cairo', sans-serif; padding: 20px; overflow-x: hidden; }
+
+    /* شاشة القفل (الأمان) */
+    #security-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--dark); z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: white;
+    }
+    .login-box {
+      background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px;
+      backdrop-filter: blur(10px); text-align: center; border: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 400px;
+    }
+    .login-input {
+      background: white; border: none; padding: 15px; border-radius: 10px;
+      width: 100%; font-size: 1.1rem; text-align: center;
+      margin-bottom: 15px; outline: none; font-weight: bold;
+    }
+    .btn-login {
+      background: var(--primary); color: white; border: none; padding: 12px 30px;
+      border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s;
+    }
+    .btn-login:hover { background: #e65c00; }
+    
+    /* إخفاء المحتوى حتى تسجيل الدخول */
+    #dashboard-content { display: none; }
+
+    /* البطاقات */
+    .dashboard-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+    .dashboard-card:active { transform: scale(0.98); }
+    .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .card-icon { font-size: 2.5rem; opacity: 0.15; position: absolute; left: 20px; }
+    .card-title { font-size: 1.1rem; font-weight: 700; color: #555; }
+    .card-count { font-size: 2rem; font-weight: 900; color: var(--dark); display: block; line-height: 1.1; }
+    .border-orange { border-right: 6px solid var(--primary); }
+    .border-green { border-right: 6px solid #2ecc71; }
+    .border-blue { border-right: 6px solid #0d6efd; }
+    
+    /* النوافذ المنبثقة */
+    .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; }
+    .popup-content { background: white; width: 95%; max-width: 600px; max-height: 90vh; border-radius: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; animation: zoomIn 0.3s ease; position: relative; }
+    @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .popup-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; border-radius: 25px 25px 0 0; }
+    .popup-title { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+    .btn-close-popup { background: #f0f0f0; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .btn-close-popup:hover { background: #e0e0e0; color: #dc3545; }
+    .popup-body { flex: 1; overflow-y: auto; padding: 20px; background: #fafafa; }
+    
+    .list-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .user-info h6 { margin: 0; font-weight: 700; color: var(--dark); }
+    .user-info small { color: #888; font-family: monospace; font-size: 0.9rem; }
+    .car-badge { background: #eef2f5; border: 1px solid #dee2e6; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; color: #495057; margin-top: 5px; display: inline-block; font-weight: bold; }
+    
+    .actions { display: flex; gap: 8px; }
+    .btn-action { width: 40px; height: 40px; border-radius: 12px; border: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .btn-del { background: #ffebee; color: #ef5350; }
+    .btn-lock { background: #e3f2fd; color: #1976d2; }
+    .btn-lock.locked { background: #ef5350; color: white; }
+    .btn-time { background: #fff3e0; color: var(--primary); }
+    .btn-view { background: #e0f2f1; color: #009688; }
+
+    .driver-details-img { width: 100%; height: 220px; object-fit: cover; border-radius: 15px; margin-bottom: 10px; border: 1px solid #ddd; background: #eee; }
+    .detail-section { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    
+    .time-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+    .btn-time-opt { border: 1px solid #eee; background: white; padding: 15px; border-radius: 15px; font-weight: bold; color: #555; transition: 0.2s; }
+    .btn-time-opt:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    
+    .pin-box { text-align: center; background: white; padding: 25px; border-radius: 15px; margin-bottom: 15px; border: 2px dashed #e0e0e0; }
+    .btn-generate { background: var(--primary); color: white; width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; margin-bottom: 20px; }
+    .pin-code { font-family: monospace; font-size: 1.2rem; letter-spacing: 2px; background: #f1f3f5; padding: 6px 12px; border-radius: 8px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div id="security-screen">
+    <div class="login-box">
+      <div style="font-size: 3.5rem; margin-bottom: 15px;">🔐</div>
+      <h3 class="fw-bold mb-3">دخول المدير</h3>
+      <p class="text-white-50 mb-4">الرجاء إدخال بيانات الاعتماد للوصول</p>
+      <input type="email" id="adminEmail" class="login-input" placeholder="البريد الإلكتروني">
+      <input type="password" id="adminPass" class="login-input" placeholder="كلمة المرور">
+      <button class="btn-login" id="loginBtn" onclick="loginAdmin()">تسجيل الدخول</button>
+      <div id="loginError" class="text-danger mt-3 small fw-bold"></div>
+    </div>
+  </div>
+
+  <div id="dashboard-content" class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+      <h3 class="fw-bold" style="color: var(--primary);"><i class="fas fa-chart-pie me-2"></i>كروة كنترول</h3>
+      <button onclick="logoutAdmin()" class="btn btn-outline-danger btn-sm fw-bold px-3 py-2 rounded-pill"><i class="fas fa-sign-out-alt me-1"></i> خروج</button>
+    </div>
+    
+    <div class="row">
+      <div class="col-md-4">
+        <div class="dashboard-card border-green" onclick="openPopup('driversPopup')">
+          <div><span class="card-count" id="drvCount">0</span><span class="card-title">السائقين المسجلين</span></div>
+          <i class="fas fa-taxi card-icon text-success"></i><i class="fas fa-chevron-left text-muted"></i>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dashboard-card border-orange" onclick="openPopup('customersPopup')">
+          <div><span class="card-count" id="custCount">0</span><span class="card-title">الزبائن المسجلين</span></div>
+          <i class="fas fa-users card-icon text-warning"></i><i class="fas fa-chevron-left text-muted"></i>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dashboard-card border-blue" onclick="openPopup('pinsPopup')">
+          <div><span class="card-count" id="pinCount">-</span><span class="card-title">إدارة الاشتراكات</span></div>
+          <i class="fas fa-key card-icon text-primary"></i><i class="fas fa-chevron-left text-muted"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-md-4">
+        <div class="dashboard-card border-orange" onclick="openPopup('ordersPopup')">
+          <div><span class="card-count" id="orderCount">0</span><span class="card-title">آخر الرحلات</span></div>
+          <i class="fas fa-route card-icon text-info"></i><i class="fas fa-chevron-left text-muted"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="driversPopup" class="popup-overlay"><div class="popup-content"><div class="popup-header"><div class="popup-title text-success"><i class="fas fa-taxi"></i> قائمة الكباتن</div><button class="btn-close-popup" onclick="closePopup('driversPopup')">×</button></div><div class="popup-body" id="drvList"><div class="text-center text-muted p-4">جاري التحميل...</div></div></div></div>
+  <div id="customersPopup" class="popup-overlay"><div class="popup-content"><div class="popup-header"><div class="popup-title text-warning"><i class="fas fa-users"></i> قائمة الزبائن</div><button class="btn-close-popup" onclick="closePopup('customersPopup')">×</button></div><div class="popup-body" id="custList"><div class="text-center text-muted p-4">جاري التحميل...</div></div></div></div>
+  <div id="pinsPopup" class="popup-overlay"><div class="popup-content"><div class="popup-header"><div class="popup-title text-primary"><i class="fas fa-key"></i> مولد الاشتراكات</div><button class="btn-close-popup" onclick="closePopup('pinsPopup')">×</button></div><div class="popup-body"><div class="pin-box"><h6 class="text-muted mb-3">توليد كود تفعيل جديد (30 يوم)</h6><button class="btn-generate" onclick="generatePin()"><i class="fas fa-magic me-2"></i> توليد كود جديد</button></div><h6 class="fw-bold px-2 mb-3 border-bottom pb-2">الأكواد الفعالة حالياً:</h6><div id="pinList"></div></div></div></div>
+  <div id="ordersPopup" class="popup-overlay"><div class="popup-content"><div class="popup-header"><div class="popup-title text-info"><i class="fas fa-route"></i> آخر الرحلات</div><button class="btn-close-popup" onclick="closePopup('ordersPopup')">×</button></div><div class="popup-body" id="orderList"><div class="text-center text-muted p-4">جاري التحميل...</div></div></div></div>
+  <div id="timePopup" class="popup-overlay" style="z-index: 1100;"><div class="popup-content" style="height: auto; max-width: 500px;"><div class="popup-header"><div class="popup-title"><i class="fas fa-clock"></i> تمديد الاشتراك</div><button class="btn-close-popup" onclick="closePopup('timePopup')">×</button></div><div class="popup-body"><h6 class="text-center fw-bold mb-3" id="selectedDriverName"></h6><div class="time-options"><button class="btn-time-opt" onclick="addTime(1, 'minutes')">+ 1 دقيقة <small class="d-block text-muted">(تجربة)</small></button><button class="btn-time-opt" onclick="addTime(1, 'hours')">+ 1 ساعة</button><button class="btn-time-opt" onclick="addTime(1, 'days')">+ 1 يوم</button><button class="btn-time-opt" onclick="addTime(30, 'days')">+ 30 يوم</button></div></div></div></div>
+  <div id="detailsPopup" class="popup-overlay" style="z-index: 1200;"><div class="popup-content"><div class="popup-header"><div class="popup-title"><i class="fas fa-id-card"></i> ملف السائق</div><button class="btn-close-popup" onclick="closePopup('detailsPopup')">×</button></div>
+    <div class="popup-body">
+      <div class="detail-section text-center">
+        <h5 class="fw-bold text-primary mb-1" id="detailName">--</h5>
+        <div class="text-muted mb-3" id="detailPhone">--</div>
+        <div class="bg-light p-2 rounded fw-bold" id="detailCarNum">--</div>
+      </div>
+      <div class="row">
+        <div class="col-md-6"><div class="detail-section"><h6 class="fw-bold mb-2 small text-muted">الصورة الشخصية</h6><img id="detailPersonalImg" class="driver-details-img" src="" alt=""></div></div>
+        <div class="col-md-6"><div class="detail-section"><h6 class="fw-bold mb-2 small text-muted">صورة السيارة</h6><img id="detailCarImg" class="driver-details-img" src="" alt=""></div></div>
+      </div>
+    </div>
+  </div></div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = { apiKey: "AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc", databaseURL: "https://carwa-zaid-default-rtdb.firebaseio.com", projectId: "carwa-zaid" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    
+    // --- نظام الحماية الجديد (Firebase Auth) ---
+
+    // مراقبة حالة تسجيل الدخول
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // المستخدم مسجل دخول
+        document.getElementById('security-screen').style.display = 'none';
+        document.getElementById('dashboard-content').style.display = 'block';
+        initDashboard();
+      } else {
+        // المستخدم غير مسجل دخول
+        document.getElementById('security-screen').style.display = 'flex';
+        document.getElementById('dashboard-content').style.display = 'none';
+      }
+    });
+
+    function loginAdmin() {
+      const email = document.getElementById('adminEmail').value;
+      const pass = document.getElementById('adminPass').value;
+      const btn = document.getElementById('loginBtn');
+      const errorDiv = document.getElementById('loginError');
+
+      if(!email || !pass) {
+        errorDiv.innerText = "يرجى إدخال البريد وكلمة المرور";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "جاري التحقق...";
+      errorDiv.innerText = "";
+
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(() => {
+          // النجاح سيتم معالجته بواسطة onAuthStateChanged
+        })
+        .catch(error => {
+          btn.disabled = false;
+          btn.innerText = "تسجيل الدخول";
+          switch(error.code) {
+            case 'auth/user-not-found': errorDiv.innerText = "المستخدم غير موجود"; break;
+            case 'auth/wrong-password': errorDiv.innerText = "كلمة المرور خاطئة"; break;
+            case 'auth/invalid-email': errorDiv.innerText = "بريد إلكتروني غير صالح"; break;
+            default: errorDiv.innerText = "فشل تسجيل الدخول: " + error.message;
+          }
+        });
+    }
+
+    function logoutAdmin() {
+        if(confirm("هل تريد تسجيل الخروج؟")) {
+            auth.signOut().then(() => {
+                location.reload();
+            });
+        }
+    }
+
+    // --- بقية وظائف اللوحة كما هي ---
+
+    let selectedDriverPhone = null;
+    let allDriversData = {}; 
+
+    function openPopup(id) { document.getElementById(id).style.display = 'flex'; }
+    function closePopup(id) { document.getElementById(id).style.display = 'none'; }
+
+    function initDashboard() {
+        db.ref('users/drivers').on('value', snap => {
+          document.getElementById('drvCount').innerText = snap.numChildren();
+          const list = document.getElementById('drvList');
+          list.innerHTML = "";
+          allDriversData = {}; 
+          snap.forEach(child => {
+            const u = child.val();
+            allDriversData[u.phone] = u; 
+            const isLocked = u.isLocked === true;
+            const expiry = new Date(u.subscriptionExpiry);
+            const now = new Date();
+            const timeLeft = expiry - now;
+            let timeStatus = timeLeft > 0 
+                ? `<span class="badge bg-success text-white">${Math.floor(timeLeft / (86400000))} يوم</span>`
+                : `<span class="badge bg-danger text-white">منتهي</span>`;
+
+            list.innerHTML += `
+            <div class="list-item">
+              <div class="user-info">
+                <h6>${u.name} ${isLocked ? '<span class="badge bg-danger ms-1">مقفول</span>' : ''}</h6>
+                <div class="car-badge"><i class="fas fa-car-side me-1"></i> ${u.carNum || 'غير محدد'}</div>
+                <div class="d-flex gap-2 mt-1"><small>${u.phone}</small> ${timeStatus}</div>
+              </div>
+              <div class="actions">
+                <button class="btn-action btn-view" onclick="viewDriverDetails('${u.phone}')"><i class="fas fa-eye"></i></button>
+                <button class="btn-action btn-time" onclick="openTimeModal('${u.phone}', '${u.name}')"><i class="fas fa-clock"></i></button>
+                <button class="btn-action btn-lock ${isLocked ? 'locked' : ''}" onclick="toggleLock('${u.phone}', ${isLocked})"><i class="fas ${isLocked ? 'fa-lock' : 'fa-lock-open'}"></i></button>
+                <button class="btn-action btn-del" onclick="deleteUser('drivers', '${u.phone}')"><i class="fas fa-trash-alt"></i></button>
+              </div>
+            </div>`;
+          });
+        });
+
+        db.ref('users/customers').on('value', snap => {
+          document.getElementById('custCount').innerText = snap.numChildren();
+          const list = document.getElementById('custList');
+          list.innerHTML = "";
+          snap.forEach(child => {
+            const u = child.val();
+            list.innerHTML += `<div class="list-item"><div class="user-info"><h6>${u.name}</h6><small>${u.phone}</small></div><div class="actions"><button class="btn-action btn-del" onclick="deleteUser('customers', '${u.phone}')"><i class="fas fa-trash-alt"></i></button></div></div>`;
+          });
+        });
+
+        db.ref('pins').on('value', snap => {
+          const count = snap.exists() ? snap.numChildren() : 0;
+          document.getElementById('pinCount').innerText = count;
+          const list = document.getElementById('pinList');
+          list.innerHTML = "";
+          if(count === 0) { list.innerHTML = "<div class='text-center text-muted py-3'>لا توجد أكواد</div>"; return; }
+          snap.forEach(child => {
+            const pin = child.val();
+            const diffDays = Math.ceil((new Date(pin.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) {
+              list.innerHTML += `<div class="list-item"><div class="user-info"><span class="pin-code text-primary">${child.key}</span><div style="font-size:0.8rem; color:#666; margin-top:4px;">ينتهي خلال: ${diffDays} يوم</div></div><button class="btn-action" style="background:#e3f2fd; color:#0d6efd; width:auto; padding:0 15px;" onclick="copyPin('${child.key}')"><i class="fas fa-copy"></i></button></div>`;
+            } else { db.ref('pins/' + child.key).remove(); }
+          });
+        });
+
+        db.ref('orders').limitToLast(50).on('value', snap => {
+          const list = document.getElementById('orderList');
+          const count = snap.exists() ? snap.numChildren() : 0;
+          document.getElementById('orderCount').innerText = count;
+          list.innerHTML = "";
+          if (!snap.exists()) {
+            list.innerHTML = "<div class='text-center text-muted py-3'>لا توجد رحلات بعد</div>";
+            return;
+          }
+          snap.forEach(child => {
+            const o = child.val();
+            const when = o.timestamp ? new Date(o.timestamp).toLocaleString('ar-IQ') : '--';
+            let statusBadge = '';
+            switch (o.status) {
+              case 'pending': statusBadge = '<span class="badge-status bg-secondary text-white">قيد الانتظار</span>'; break;
+              case 'accepted': statusBadge = '<span class="badge-status bg-info text-white">تم القبول</span>'; break;
+              case 'in_progress': statusBadge = '<span class="badge-status bg-primary text-white">جارية</span>'; break;
+              case 'completed': statusBadge = '<span class="badge-status bg-success text-white">منتهية</span>'; break;
+              case 'cancelled': statusBadge = '<span class="badge-status bg-danger text-white">ملغاة</span>'; break;
+              default: statusBadge = ''; 
+            }
+            const driverLabel = o.driver ? o.driver : 'بدون كابتن';
+            list.innerHTML = `<div class="list-item">
+              <div class="user-info">
+                <h6>${o.customerName || 'زبون'} ${statusBadge}</h6>
+                <small>${o.customerPhone || ''}</small>
+              </div>
+              <div class="text-end" style="font-size:0.8rem;">
+                <div><i class="fas fa-user-tie me-1 text-warning"></i>${driverLabel}</div>
+                <div class="mt-1">${when}</div>
+              </div>
+            </div>` + list.innerHTML;
+          });
+        });
+    }
+
+    function viewDriverDetails(phone) {
+        const driver = allDriversData[phone];
+        if(!driver) return;
+        document.getElementById('detailName').innerText = driver.name;
+        document.getElementById('detailPhone').innerText = driver.phone;
+        document.getElementById('detailCarNum').innerText = driver.carNum || "غير متوفر";
+        document.getElementById('detailPersonalImg').src = driver.photo || "";
+        document.getElementById('detailCarImg').src = driver.carPhoto || "";
+        openPopup('detailsPopup');
+    }
+
+    function deleteUser(type, phone) { if(confirm('حذف المستخدم نهائياً؟')) { db.ref(`users/${type}/${phone}`).remove(); } }
+    function toggleLock(phone, currentStatus) { db.ref(`users/drivers/${phone}`).update({ isLocked: !currentStatus }); }
+    function generatePin() { 
+        const pinCode = Math.floor(100000 + Math.random() * 900000); 
+        const expiryDate = new Date(); expiryDate.setDate(expiryDate.getDate() + 30); 
+        db.ref('pins/' + pinCode).set({ createdAt: new Date().toISOString(), expiry: expiryDate.toISOString() });
+    }
+    function copyPin(text) { navigator.clipboard.writeText(text).then(() => alert("تم نسخ الكود")); }
+    function openTimeModal(phone, name) { selectedDriverPhone = phone; document.getElementById('selectedDriverName').innerText = "تمديد لـ: " + name; openPopup('timePopup'); }
+    function addTime(amount, unit) {
+      if(!selectedDriverPhone) return;
+      db.ref('users/drivers/' + selectedDriverPhone).once('value', snap => {
+        const user = snap.val();
+        let expiry = new Date(user.subscriptionExpiry);
+        const now = new Date();
+        if(now > expiry) expiry = now;
+        if(unit === 'minutes') expiry.setMinutes(expiry.getMinutes() + amount);
+        if(unit === 'hours') expiry.setHours(expiry.getHours() + amount);
+        if(unit === 'days') expiry.setDate(expiry.getDate() + amount);
+        db.ref('users/drivers/' + selectedDriverPhone).update({ subscriptionExpiry: expiry.toISOString(), isLocked: false }).then(() => { alert("تم التمديد"); closePopup('timePopup'); });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -272,7 +272,7 @@
       font-size: 1rem;
     }
 
-    .chat-float-btn { 
+    .chat-float-btn, .orders-float-btn { 
       position: fixed; 
       bottom: 25px; 
       left: 15px; 
@@ -284,14 +284,15 @@
       color: white; 
       border: none; 
       box-shadow: 0 5px 25px rgba(255, 111, 0, 0.3); 
-      display: none; 
+      display: flex; 
       align-items: center; 
       justify-content: center; 
       font-size: 1.2rem;
       transition: transform 0.2s;
     }
-    .chat-float-btn:active { transform: scale(0.9); }
-    .chat-float-btn.has-unread::after {
+    .chat-float-btn:active, .orders-float-btn:active { transform: scale(0.9); }
+    .chat-float-btn.has-unread::after,
+    .orders-float-btn.has-unread::after {
       content: "";
       position: absolute;
       top: 6px;
@@ -303,7 +304,7 @@
       box-shadow: 0 0 0 3px rgba(0,0,0,0.4);
     }
     
-    .chat-popup { 
+    .chat-popup, .orders-popup { 
       position: fixed; 
       bottom: 85px; 
       left: 15px; 
@@ -513,6 +514,7 @@
     </div>
   </div>
 
+  <button id="ordersBtn" class="orders-float-btn" onclick="toggleOrders()" style="left: 80px;"><i class="fas fa-list-ul"></i></button>
   <button id="chatBtn" class="chat-float-btn" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
   
   <div id="chatWindow" class="chat-popup">
@@ -525,6 +527,14 @@
       <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter')sendMsg()">
       <button class="btn btn-warning rounded-circle" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
     </div>
+  </div>
+
+  <div id="ordersWindow" class="orders-popup">
+    <div style="background:var(--dark); color:white; padding:12px 15px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:700;"><i class="fas fa-receipt me-1"></i>الطلبات</span>
+      <button class="btn btn-sm text-white p-0" onclick="toggleOrders()" style="width:30px;height:30px;"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="ordersList" style="max-height:260px; overflow-y:auto; padding:10px; background:#111;"></div>
   </div>
 
   <div class="stats-overlay" id="statsOverlay">
@@ -555,9 +565,12 @@
     let currentHeading = 0;
     let lastFirebaseUpdate = 0;
     const FIREBASE_UPDATE_INTERVAL = 3000;
+    let lastStatusUpdate = 0;
+    const STATUS_UPDATE_INTERVAL = 5000;
     let lastHeading = 0;
     let headingHistory = [];
     let unreadChat = 0;
+    let unreadOrders = 0;
     let voiceEnabled = true;
     let navSteps = [];
     let navStepIdx = 0;
@@ -570,6 +583,7 @@
 
     const driverName = localStorage.getItem('carwa_driver_name') || "كابتن";
     const driverPhone = localStorage.getItem('carwa_driver_phone');
+    const driverStatusRef = driverPhone ? db.ref('driversStatus/' + driverPhone) : null;
     let carPlate = localStorage.getItem('carwa_driver_carplate') || "";
     
     document.getElementById('driverTitle').innerText = driverName;
@@ -706,6 +720,21 @@
         document.getElementById('carSettingsModal').style.display = 'flex';
       }
 
+      // تحديث حالة الكابتن كمتصل
+      if (driverStatusRef) {
+        driverStatusRef.update({
+          name: driverName,
+          carPlate: carPlate || null,
+          isOnline: true,
+          lastSeen: Date.now(),
+          lat: savedPos.lat,
+          lng: savedPos.lng
+        });
+        window.addEventListener('beforeunload', () => {
+          driverStatusRef.update({ isOnline: false, lastSeen: Date.now() });
+        });
+      }
+
       listenForOrders();
       startGpsTracking();
       document.addEventListener('click', requestWakeLock);
@@ -777,6 +806,18 @@
           createOrUpdateDriverMarker(latLng, heading);
           updateCarRotation(heading);
 
+          // تحديث حالة الكابتن في مسار driversStatus
+          if (driverStatusRef && Date.now() - lastStatusUpdate > STATUS_UPDATE_INTERVAL) {
+            lastStatusUpdate = Date.now();
+            driverStatusRef.update({
+              isOnline: true,
+              lastSeen: Date.now(),
+              lat,
+              lng,
+              heading: currentHeading
+            });
+          }
+
           if (isAutoFollow) {
             map.panTo(latLng);
             if (currentOrder) { 
@@ -818,11 +859,23 @@
         const ignored = JSON.parse(localStorage.getItem('carwa_ignored_orders') || "[]");
         const newOrders = snap.val() || {};
         for(let id in markers) { if(!newOrders[id]) { markers[id].setMap(null); delete markers[id]; } }
-
+        const ordersList = document.getElementById('ordersList');
+        const ordersBtn = document.getElementById('ordersBtn');
+        if (ordersList) ordersList.innerHTML = "";
+        let localCount = 0;
         snap.forEach(child => {
           const o = child.val();
           if (ignored.includes(o.id)) return;
-
+          localCount++;
+          if (ordersList) {
+            const li = document.createElement('div');
+            li.className = 'p-2 mb-2 rounded bg-dark text-white';
+            li.style.fontSize = '0.85rem';
+            li.innerHTML = `<div class="fw-bold mb-1">${o.customerName || 'زبون'} <span class="badge bg-secondary ms-1">${o.estimatedDistance || ''}</span></div>
+              <div class="text-muted" style="font-size:0.78rem;">${o.estimatedTime || ''}</div>
+              <button class="btn btn-sm btn-warning w-100 mt-2" onclick="acceptOrder('${o.id}')"><i class="fas fa-check me-1"></i>قبول</button>`;
+            ordersList.insertBefore(li, ordersList.firstChild);
+          }
           if(!markers[o.id]) {
               const m = new google.maps.Marker({ position: o.pickup, map: map, animation: google.maps.Animation.BOUNCE });
               
@@ -869,6 +922,11 @@
               if (navigator.vibrate) navigator.vibrate(200);
           }
         });
+        unreadOrders = localCount;
+        if (ordersBtn) {
+          if (unreadOrders > 0) ordersBtn.classList.add('has-unread');
+          else ordersBtn.classList.remove('has-unread');
+        }
       });
     }
 
@@ -1058,13 +1116,24 @@
       const btn = document.getElementById('chatBtn');
       if (win.style.display === 'flex') {
         win.style.display = 'none';
-        unreadChat = 0;
-        btn && btn.classList.remove('has-unread');
       } else {
         win.style.display = 'flex';
-        btn && btn.classList.remove('has-unread');
-        unreadChat = 0;
       }
+      unreadChat = 0;
+      btn && btn.classList.remove('has-unread');
+    }
+
+    function toggleOrders() {
+      const win = document.getElementById('ordersWindow');
+      const btn = document.getElementById('ordersBtn');
+      if (!win) return;
+      if (win.style.display === 'flex') {
+        win.style.display = 'none';
+      } else {
+        win.style.display = 'flex';
+      }
+      unreadOrders = 0;
+      btn && btn.classList.remove('has-unread');
     }
 
     function checkSubscription() {

@@ -495,10 +495,11 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let map, marker, driverMarker, directionsService, solidRenderer, dashedRenderer;
+    let map, pickupMarker, destMarker, driverMarker, directionsService, solidRenderer, dashedRenderer;
     let currentStep = 'pickup', pickupPos, destPos, activeOrderId = null, driverData = null;
     let lastRenderStatus = '';
     let orderRef = null;
+    let driversMarkers = {};
     let unreadChat = 0;
     const customerName = localStorage.getItem('carwa_user_name') || "عميل";
     const customerPhone = localStorage.getItem('carwa_user_phone') || "";
@@ -521,19 +522,25 @@
         center: defaultPos, zoom: 16, disableDefaultUI: true, styles: darkMapStyle,
         gestureHandling: 'greedy'
       });
-      marker = new google.maps.Marker({ map: map, position: defaultPos, draggable: true });
+      pickupMarker = new google.maps.Marker({
+        map,
+        position: defaultPos,
+        draggable: true,
+        label: { text: 'A', color: '#fff', fontWeight: 'bold' }
+      });
       directionsService = new google.maps.DirectionsService();
       solidRenderer = new google.maps.DirectionsRenderer({ map: map, suppressMarkers: true, polylineOptions: { strokeColor: "#FF6F00", strokeWeight: 6 } });
       dashedRenderer = new google.maps.DirectionsRenderer({ map: map, suppressMarkers: true, polylineOptions: { strokeOpacity: 0, icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 }, offset: '0', repeat: '20px' }], strokeColor: "#666", strokeWeight: 2 } });
       renderUI();
       fetchUserLocation();
+      subscribeNearbyDrivers();
     }
     function fetchUserLocation() {
       if (!navigator.geolocation || currentStep !== 'pickup') return;
       navigator.geolocation.getCurrentPosition(pos => {
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.panTo(p);
-        marker.setPosition(p);
+        if (pickupMarker) pickupMarker.setPosition(p);
         pickupPos = p;
         localStorage.setItem('carwa_last_lat', p.lat);
         localStorage.setItem('carwa_last_lng', p.lng);
@@ -550,7 +557,7 @@
           map.setZoom(17);
           
           if (currentStep === 'pickup') {
-            marker.setPosition(myPos);
+            if (pickupMarker) pickupMarker.setPosition(myPos);
             pickupPos = myPos;
             localStorage.setItem('carwa_last_lat', myPos.lat);
             localStorage.setItem('carwa_last_lng', myPos.lng);
@@ -652,16 +659,42 @@
     }
 
     function confirmPickup() { 
-      const pos = marker.getPosition();
+      const m = pickupMarker;
+      const pos = m.getPosition();
       pickupPos = { lat: pos.lat(), lng: pos.lng() };
       localStorage.setItem('carwa_last_lat', pickupPos.lat);
       localStorage.setItem('carwa_last_lng', pickupPos.lng);
+      // إنشاء B بجانب A مباشرة (فرق بسيط) ليظهرا معاً
+      const offsetLat = 0.00035;
+      const offsetLng = 0.00025;
+      const bPos = { lat: pickupPos.lat + offsetLat, lng: pickupPos.lng + offsetLng };
+      if (!destMarker) {
+        destMarker = new google.maps.Marker({
+          map,
+          position: bPos,
+          draggable: true,
+          label: { text: 'B', color: '#fff', fontWeight: 'bold' }
+        });
+      } else {
+        destMarker.setMap(map);
+        destMarker.setPosition(bPos);
+      }
+      // تحريك الكاميرا لتُظهر A و B معاً
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(pos);
+      bounds.extend(new google.maps.LatLng(bPos.lat, bPos.lng));
+      map.fitBounds(bounds);
+
       currentStep = 'dropoff'; renderUI(); 
     }
 
     function confirmDestination() { 
-      destPos = { lat: marker.getPosition().lat(), lng: marker.getPosition().lng() }; 
-      currentStep = 'confirm'; marker.setVisible(false); renderUI(); 
+      const p = pickupMarker.getPosition();
+      // في خطوة اختيار الوجهة، يستخدم المستخدم البحث أو سحب الخريطة،
+      // فنأخذ مركز الخريطة كنقطة B
+      const b = destMarker ? destMarker.getPosition() : map.getCenter();
+      destPos = { lat: b.lat(), lng: b.lng() }; 
+      currentStep = 'confirm'; renderUI(); 
       directionsService.route({ origin: pickupPos, destination: destPos, travelMode: 'DRIVING' }, (res) => {
         if(res.status === 'OK') {
           dashedRenderer.setDirections(res);
@@ -674,6 +707,41 @@
     }
 
     function toast(msg) { const el = document.createElement('div'); el.className = 'toast-msg'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 2500); }
+    
+    function subscribeNearbyDrivers() {
+      db.ref('driversStatus').on('value', snap => {
+        const data = snap.val() || {};
+        const seen = new Set();
+        Object.keys(data).forEach(phone => {
+          const d = data[phone];
+          if (!d || !d.isOnline || d.lat == null || d.lng == null) return;
+          const pos = new google.maps.LatLng(d.lat, d.lng);
+          seen.add(phone);
+          let m = driversMarkers[phone];
+          if (!m) {
+            m = new google.maps.Marker({
+              position: pos,
+              map,
+              icon: {
+                url: "assets/logo.png",
+                scaledSize: new google.maps.Size(30, 30),
+                anchor: new google.maps.Point(15, 15)
+              },
+              title: d.name || 'كابتن'
+            });
+            driversMarkers[phone] = m;
+          } else {
+            m.setPosition(pos);
+          }
+        });
+        Object.keys(driversMarkers).forEach(phone => {
+          if (!seen.has(phone)) {
+            driversMarkers[phone].setMap(null);
+            delete driversMarkers[phone];
+          }
+        });
+      });
+    }
     function sendOrder() {
       const oId = "ID_" + Date.now(); 
       activeOrderId = oId;
@@ -837,7 +905,15 @@
           const auto = new google.maps.places.Autocomplete(input, { componentRestrictions: { country: 'iq' } });
           auto.addListener("place_changed", () => {
             const p = auto.getPlace();
-            if(p.geometry) { map.setCenter(p.geometry.location); marker.setPosition(p.geometry.location); }
+            if(p.geometry) { 
+              map.setCenter(p.geometry.location); 
+              if (currentStep === 'pickup' && pickupMarker) {
+                pickupMarker.setPosition(p.geometry.location);
+              }
+              if (currentStep === 'dropoff' && destMarker) {
+                destMarker.setPosition(p.geometry.location);
+              }
+            }
           });
         }
       }, 300);

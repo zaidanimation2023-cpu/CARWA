@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000">
   <title>كروة 2026 - الزبون</title>
+  <link rel="preconnect" href="https://carwa-zaid-default-rtdb.firebaseio.com">
+  <link rel="preconnect" href="https://maps.googleapis.com">
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -111,6 +114,8 @@
       font-size: 1.1rem;
     }
     .text-muted { color: #999 !important; }
+    .toast-msg { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 24px; border-radius: 12px; font-weight: 700; z-index: 9999; animation: toastIn 0.3s; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
     
     .search-input { 
       border-radius: 14px; 
@@ -445,7 +450,7 @@
     </div>
     <div class="chat-msgs" id="chatMsgs"></div>
     <div class="chat-input-area">
-      <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة...">
+      <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter')sendMsg()">
       <button class="btn btn-warning rounded-circle" onclick="sendMsg()">
         <i class="fas fa-paper-plane"></i>
       </button>
@@ -479,6 +484,8 @@
 
     let map, marker, driverMarker, directionsService, solidRenderer, dashedRenderer;
     let currentStep = 'pickup', pickupPos, destPos, activeOrderId = null, driverData = null;
+    let lastRenderStatus = '';
+    let orderRef = null;
     const customerName = localStorage.getItem('carwa_user_name') || "عميل";
     const customerPhone = localStorage.getItem('carwa_user_phone') || "";
     
@@ -497,18 +504,26 @@
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), { 
-        center: defaultPos, 
-        zoom: 16, 
-        disableDefaultUI: true,
-        styles: darkMapStyle
+        center: defaultPos, zoom: 16, disableDefaultUI: true, styles: darkMapStyle,
+        gestureHandling: 'greedy'
       });
       marker = new google.maps.Marker({ map: map, position: defaultPos, draggable: true });
       directionsService = new google.maps.DirectionsService();
-      
       solidRenderer = new google.maps.DirectionsRenderer({ map: map, suppressMarkers: true, polylineOptions: { strokeColor: "#FF6F00", strokeWeight: 6 } });
       dashedRenderer = new google.maps.DirectionsRenderer({ map: map, suppressMarkers: true, polylineOptions: { strokeOpacity: 0, icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 }, offset: '0', repeat: '20px' }], strokeColor: "#666", strokeWeight: 2 } });
-
       renderUI();
+      fetchUserLocation();
+    }
+    function fetchUserLocation() {
+      if (!navigator.geolocation || currentStep !== 'pickup') return;
+      navigator.geolocation.getCurrentPosition(pos => {
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        map.panTo(p);
+        marker.setPosition(p);
+        pickupPos = p;
+        localStorage.setItem('carwa_last_lat', p.lat);
+        localStorage.setItem('carwa_last_lng', p.lng);
+      }, () => {}, { enableHighAccuracy: true, maximumAge: 60000 });
     }
 
     function recenterCameraOnUser() {
@@ -529,7 +544,7 @@
           
           document.querySelector('.recenter-btn i').classList.remove('fa-spin');
         }, () => {
-          alert("يرجى تفعيل الـ GPS لتحديد موقعك");
+          toast("فعّل الـ GPS لتحديد موقعك");
           document.querySelector('.recenter-btn i').classList.remove('fa-spin');
         }, { enableHighAccuracy: true });
       }
@@ -578,7 +593,13 @@
         container.innerHTML = `<h5>إلى أين تريد الذهاب؟</h5><input id="pac-input" class="form-control search-input" placeholder="ابحث عن وجهتك..."><button class="btn btn-confirm" onclick="confirmDestination()">تأكيد الوجهة</button>`;
         activateSearch();
       } else if (currentStep === 'confirm') {
-        container.innerHTML = `<h5>ملخص الرحلة</h5><button class="btn btn-confirm btn-request" onclick="sendOrder()">اطلب كروة الآن</button>`;
+        let distM = 0;
+        if (window.estimatedDist) {
+          const m = window.estimatedDist.match(/([\d.]+)\s*km/i);
+          distM = m ? parseFloat(m[1]) * 1000 : parseFloat(window.estimatedDist) || 0;
+        }
+        const estFare = (500 + Math.round(distM)).toLocaleString() + ' د.ع';
+        container.innerHTML = `<h5>ملخص الرحلة</h5><div class="stat-row mb-2"><span>المسافة</span><span class="fw-bold">${window.estimatedDist || '--'}</span></div><div class="stat-row mb-2"><span>الوقت تقريباً</span><span class="fw-bold">${window.estimatedTime || '--'}</span></div><div class="stat-row mb-3"><span>التكلفة تقريباً</span><span class="fw-bold" style="color:var(--primary)">${estFare}</span></div><button id="sendOrderBtn" class="btn btn-confirm btn-request" onclick="sendOrder()">اطلب كروة الآن 🚕</button>`;
       } else if (currentStep === 'waiting') {
         container.innerHTML = `
           <div class="text-center py-4">
@@ -631,13 +652,17 @@
           const leg = res.routes[0].legs[0];
           window.estimatedTime = leg.duration?.text || '--';
           window.estimatedDist = leg.distance?.text || '--';
+          if (currentStep === 'confirm') renderUI();
         }
       });
     }
 
+    function toast(msg) { const el = document.createElement('div'); el.className = 'toast-msg'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 2500); }
     function sendOrder() {
       const oId = "ID_" + Date.now(); 
       activeOrderId = oId;
+      const orderStartTime = Date.now();
+      const ORDER_TIMEOUT_MS = 120000;
       
       const orderData = {
         id: oId,
@@ -651,41 +676,53 @@
         estimatedTime: window.estimatedTime || '--'
       };
       
+      const sendBtn = document.getElementById('sendOrderBtn');
+      if (sendBtn) { sendBtn.disabled = true; sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري الإرسال...'; }
       db.ref('orders/' + oId).set(orderData)
       .then(() => { 
         currentStep = 'waiting'; 
         renderUI(); 
-        trackOrder(oId); 
+        trackOrder(oId);
+        const timeoutCheck = setInterval(() => {
+          if (currentStep !== 'waiting') { clearInterval(timeoutCheck); return; }
+          if (Date.now() - orderStartTime > ORDER_TIMEOUT_MS) {
+            clearInterval(timeoutCheck);
+            const w = document.querySelector('#ui-container .btn-outline-danger');
+            if (w) w.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>لم يُعثر على كابتن - إلغاء؟';
+          }
+        }, 10000);
       })
       .catch(err => {
-        alert("حدث خطأ في إرسال الطلب، حاول مرة أخرى");
+        toast("حدث خطأ - تحقق من الاتصال وحاول مجدداً");
+        if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = 'اطلب كروة الآن 🚕'; }
         console.error(err);
       });
     }
 
     function trackOrder(orderId) {
-      db.ref('orders/' + orderId).on('value', snap => {
+      if (orderRef) orderRef.off();
+      orderRef = db.ref('orders/' + orderId);
+      orderRef.on('value', snap => {
         const data = snap.val(); 
         if (!data) return;
         driverData = data;
         
         if (data.status === 'cancelled') { 
-          alert("تم إلغاء الرحلة"); 
-          location.reload(); 
+          toast("تم إلغاء الرحلة"); 
+          if (orderRef) orderRef.off();
+          setTimeout(() => location.reload(), 1500);
         }
         
         if (data.status === 'accepted' || data.status === 'in_progress') {
           if (!window.driverFoundPlayed) {
             document.getElementById('driverFoundSound').play().catch(()=>{});
             window.driverFoundPlayed = true;
+            if (navigator.vibrate) navigator.vibrate(100);
           }
-          
           currentStep = 'tracking'; 
           const statusMsg = data.status === 'accepted' ? "الكابتن في الطريق إليك" : "أنت في الرحلة الآن";
-          renderUI(statusMsg);
-          
+          if (lastRenderStatus !== statusMsg) { lastRenderStatus = statusMsg; renderUI(statusMsg); }
           document.getElementById('chatBtn').style.display = 'flex';
-          
           if(data.driver_location) {
             updateDriverMarker(data.driver_location);
             const target = data.status === 'accepted' ? pickupPos : destPos;
@@ -697,7 +734,10 @@
             }
           }
         }
-        if (data.status === 'completed') showTripSummary(data);
+        if (data.status === 'completed') {
+          if (orderRef) orderRef.off();
+          showTripSummary(data);
+        }
       });
     }
 
@@ -727,6 +767,8 @@
     }
 
     function initChat(id) {
+      if (window._chatInitId === id) return;
+      window._chatInitId = id;
       const chatMsgs = document.getElementById('chatMsgs');
       if(chatMsgs) chatMsgs.innerHTML = '';
       
@@ -764,19 +806,21 @@
     function activateSearch() {
       setTimeout(() => {
         const input = document.getElementById("pac-input");
-        if(input) {
-          const auto = new google.maps.places.Autocomplete(input);
+        if (input && !input.dataset.autocomplete) {
+          input.dataset.autocomplete = '1';
+          const auto = new google.maps.places.Autocomplete(input, { componentRestrictions: { country: 'iq' } });
           auto.addListener("place_changed", () => {
             const p = auto.getPlace();
             if(p.geometry) { map.setCenter(p.geometry.location); marker.setPosition(p.geometry.location); }
           });
         }
-      }, 500);
+      }, 300);
     }
 
     function logout() { localStorage.clear(); window.location.href = "index.html"; }
     
     function cancelOrder() { 
+      if (!activeOrderId) { toast("لا يوجد طلب نشط"); return; }
       if(confirm("هل أنت متأكد من إلغاء الرحلة؟ سيتم إشعار الكابتن.")) {
         db.ref('orders/' + activeOrderId).update({ 
           status: 'cancelled',
@@ -785,7 +829,7 @@
         }).then(() => {
           location.reload(); 
         }).catch((error) => {
-          alert("حدث خطأ في الاتصال، حاول مرة أخرى");
+          toast("حدث خطأ - تحقق من الاتصال");
         });
       } 
     }

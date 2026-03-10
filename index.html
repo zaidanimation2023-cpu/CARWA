@@ -3,18 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000">
+  <meta name="description" content="كروة - تطبيق تكسي سريع في العراق">
   <title>كروة 2026 - الرئيسية</title>
+  <link rel="preconnect" href="https://carwa-zaid-default-rtdb.firebaseio.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root { --primary: #FF6F00; --dark: #2D3436; --light-bg: #000000; }
     body { background: #000; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Cairo', sans-serif; margin: 0; background-image: radial-gradient(rgba(255, 111, 0, 0.3) 0.5px, transparent 0.5px), radial-gradient(rgba(255, 111, 0, 0.2) 0.5px, transparent 0.5px); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
     body.loading .gate-card { display: none; }
-    body.loading .splash-screen { display: flex; }
     
     /* شاشة الترحيب (Splash Screen) */
     .splash-screen {
-      display: none;
+      display: flex;
       position: fixed;
       top: 0;
       left: 0;
@@ -25,8 +28,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      animation: splashFadeOut 0.5s ease-out 2s forwards;
+      transition: opacity 0.35s ease-out, visibility 0.35s ease-out;
     }
+    .splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .splash-screen .splash-logo {
       max-width: 220px;
       width: 70%;
@@ -44,9 +48,7 @@
       0%, 100% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.05); opacity: 0.95; }
     }
-    @keyframes splashFadeOut {
-      to { opacity: 0; pointer-events: none; visibility: hidden; }
-    }
+    /* splashFadeOut لم يعد مستخدم */
     
     .gate-card { background: #000; padding: 40px 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(255, 111, 0, 0.15); text-align: center; width: 90%; max-width: 400px; position: relative; overflow-y: auto; max-height: 90vh; border: 1px solid #222; }
     .gate-card .page-logo { max-width: 140px; height: auto; margin-bottom: 15px; }
@@ -64,11 +66,14 @@
     .back-btn { cursor: pointer; color: #888; font-size: 0.85rem; margin-bottom: 15px; display: inline-block; font-weight: 700; }
     
     #welcomeBackMsg { display: none; background: #000; color: #64b5f6; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; border: 1px solid #333; }
+    .btn-choice:disabled { opacity: 0.7; cursor: not-allowed; }
+    .toast-msg { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 24px; border-radius: 12px; font-weight: 700; z-index: 9999; animation: toastIn 0.3s; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
-<body class="loading"> 
+<body> 
 
   <!-- شاشة الترحيب (Splash Screen) -->
   <div class="splash-screen">
@@ -98,7 +103,7 @@
       <label class="form-label">رقم الهاتف (عراقي) *</label>
       <input type="tel" id="custPhone" class="form-control" placeholder="07xxxxxxxxx" maxlength="11">
       
-      <button class="btn-choice btn-driver" onclick="registerUser('customer')">تسجيل ودخول</button>
+      <button id="custSubmitBtn" class="btn-choice btn-driver" onclick="registerUser('customer', this)">تسجيل ودخول</button>
     </div>
 
     <div id="driver-form" class="form-section">
@@ -120,7 +125,7 @@
       <label class="form-label">صورة السيارة (من الأمام) *</label>
       <input type="file" id="drvCarPhoto" class="form-control" accept="image/*">
       
-      <button class="btn-choice btn-driver" onclick="registerUser('driver')">بدء العمل</button>
+      <button id="drvSubmitBtn" class="btn-choice btn-driver" onclick="registerUser('driver', this)">بدء العمل</button>
     </div>
   </div>
 
@@ -128,50 +133,53 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc",
-      databaseURL: "https://carwa-zaid-default-rtdb.firebaseio.com",
-      projectId: "carwa-zaid"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    // إخفاء السبلاش دائماً بعد وقت قصير (بدون اعتماد على Firebase)
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        document.querySelector('.splash-screen')?.classList.add('hidden');
+      }, 900);
+    });
 
+    // تهيئة deviceId محلياً (لا تتطلب اتصال)
     let deviceId = localStorage.getItem('carwa_device_id');
     if (!deviceId) {
       deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now();
       localStorage.setItem('carwa_device_id', deviceId);
     }
 
-    // التحقق السريع من التخزين المحلي أولاً لتسريع الواجهة
+    // إعادة توجيه سريع حسب التخزين المحلي (أسرع شيء)
     const cachedType = localStorage.getItem('carwa_user_type');
-    if (cachedType) {
-         if (cachedType === 'customer') window.location.href = "customer.html";
-         else if (cachedType === 'driver') window.location.href = "driver.html";
-    }
+    if (cachedType === 'customer') { window.location.replace('customer.html'); }
+    else if (cachedType === 'driver') { window.location.replace('driver.html'); }
 
-    (function checkLogin() {
-        // التحقق من السيرفر كإجراء احتياطي وتحديث للبيانات
-        db.ref('devices/' + deviceId).once('value', snap => {
-            if (snap.exists()) {
-                const savedData = snap.val();
-                if(savedData.type !== cachedType) { // إذا اختلفت البيانات عن الكاش
-                    const msgBox = document.getElementById('welcomeBackMsg');
-                    msgBox.innerHTML = `مرحباً بك مجدداً <b>${savedData.name}</b><br>سيتم الدخول لحسابك المسجل بهذا الجهاز.`;
-                    msgBox.style.display = 'block';
-                    window.boundAccount = savedData; 
-                    
-                    // إعادة توجيه بعد ثانية واحدة لإظهار الرسالة
-                    setTimeout(() => forceLogin(savedData), 1500);
-                }
-            }
-            document.body.classList.remove('loading');
-        });
+    // Firebase اختياري: يستخدم فقط لربط الجهاز وإظهار رسالة "مرحباً بك"
+    let db = null;
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc",
+        databaseURL: "https://carwa-zaid-default-rtdb.firebaseio.com",
+        projectId: "carwa-zaid"
+      };
+      if (window.firebase && firebase.apps && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      if (window.firebase) db = firebase.database();
+    } catch (e) { db = null; }
+
+    (function checkLoginOptional() {
+      if (!db) return;
+      db.ref('devices/' + deviceId).once('value').then(snap => {
+        if (!snap.exists()) return;
+        const savedData = snap.val();
+        const msgBox = document.getElementById('welcomeBackMsg');
+        msgBox.innerHTML = `مرحباً بك مجدداً <b>${savedData.name}</b>`;
+        msgBox.style.display = 'block';
+        window.boundAccount = savedData;
+      }).catch(() => {});
     })();
 
     function showForm(type) {
       if (window.boundAccount) {
         if(window.boundAccount.type !== type) {
-          alert("عفواً، هذا الجهاز مسجل كـ " + (window.boundAccount.type === 'driver' ? 'سائق' : 'زبون') + " ولا يمكن تغيير نوع الحساب.");
+          toast("هذا الجهاز مسجل كـ " + (window.boundAccount.type === 'driver' ? 'كابتن' : 'زبون'));
           type = window.boundAccount.type;
         }
         forceLogin(window.boundAccount);
@@ -205,20 +213,30 @@
         return regex.test(phone);
     }
 
-    function registerUser(type) {
+    function toast(msg) {
+      const el = document.createElement('div');
+      el.className = 'toast-msg';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2500);
+    }
+
+    function registerUser(type, btn) {
       if (window.boundAccount) {
-        alert("هذا الجهاز مسجل مسبقاً باسم " + window.boundAccount.name + ". سيتم الدخول للحساب الأصلي.");
+        toast("جاري الدخول لحسابك...");
         forceLogin(window.boundAccount);
         return;
       }
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري...'; }
 
       if (type === 'customer') {
         const name = document.getElementById('custName').value.trim();
         const phone = document.getElementById('custPhone').value.trim();
 
-        if (!name || !phone) { alert("يرجى ملء جميع الحقول."); return; }
+        if (!name || !phone) { toast("يرجى ملء جميع الحقول"); if(btn) { btn.disabled = false; btn.innerHTML = 'تسجيل ودخول'; } return; }
         if (!validateIraqiPhone(phone)) {
-            alert("يرجى إدخال رقم هاتف عراقي صحيح (يتكون من 11 رقم ويبدأ بـ 07)");
+            toast("رقم هاتف عراقي صحيح: 07xxxxxxxxx");
+            if(btn) { btn.disabled = false; btn.innerHTML = 'تسجيل ودخول'; }
             return;
         }
         saveAndRedirect('customer', name, phone, null);
@@ -231,12 +249,14 @@
         const carPhotoInput = document.getElementById('drvCarPhoto');
 
         if (!name || !phone || !carNum || !photoInput.files[0] || !carPhotoInput.files[0]) { 
-            alert("يرجى ملء جميع الحقول ورفع الصور المطلوبة (الشخصية والسيارة)."); 
+            toast("يرجى ملء جميع الحقول ورفع الصور"); 
+            if(btn) { btn.disabled = false; btn.innerHTML = 'بدء العمل'; }
             return; 
         }
 
         if (!validateIraqiPhone(phone)) {
-            alert("يرجى إدخال رقم هاتف عراقي صحيح (يتكون من 11 رقم ويبدأ بـ 07)");
+            toast("رقم هاتف عراقي صحيح: 07xxxxxxxxx");
+            if(btn) { btn.disabled = false; btn.innerHTML = 'بدء العمل'; }
             return;
         }
 
@@ -287,8 +307,16 @@
       updates[`users/${type}s/${phone}`] = userData;
       updates[`devices/${deviceId}`] = { type: type, phone: phone, name: name };
 
+      if (!db) { window.location.href = type + ".html"; return; }
+
       db.ref().update(updates).then(() => {
         window.location.href = type + ".html";
+      }).catch(() => {
+        toast("حدث خطأ، تحقق من الاتصال وحاول مجدداً");
+        const cBtn = document.getElementById('custSubmitBtn');
+        const dBtn = document.getElementById('drvSubmitBtn');
+        if (cBtn) { cBtn.disabled = false; cBtn.innerHTML = 'تسجيل ودخول'; }
+        if (dBtn) { dBtn.disabled = false; dBtn.innerHTML = 'بدء العمل'; }
       });
     }
   </script>

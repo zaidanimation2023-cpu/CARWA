@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000">
   <title>كروة 2026 - كابتن</title>
+  <link rel="preconnect" href="https://carwa-zaid-default-rtdb.firebaseio.com">
+  <link rel="preconnect" href="https://maps.googleapis.com">
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -20,6 +23,13 @@
       --panel-padding: 15px;
       --btn-height: 50px;
       --btn-font: 1rem;
+    }
+
+    body.light-mode {
+      --bg-color: #fdfdfd;
+      --text-color: #1a1a1a;
+      --panel-bg: rgba(255,255,255,0.95);
+      --panel-border: #e9ecef;
     }
     
     body, html { 
@@ -226,6 +236,8 @@
       background: #111; 
       color: var(--text-color); 
     }
+    .toast-msg { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 24px; border-radius: 12px; font-weight: 700; z-index: 99999; animation: toastIn 0.3s; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
     .btn-unlock { 
       background: var(--primary); 
       color: white; 
@@ -470,7 +482,7 @@
     </div>
     <div class="chat-msgs" id="chatMsgs" style="height:200px; overflow-y:auto; padding:15px; background:#111;"></div>
     <div class="chat-footer">
-      <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة...">
+      <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter')sendMsg()">
       <button class="btn btn-warning rounded-circle" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
@@ -501,10 +513,12 @@
     let lastLat = 0, lastLng = 0;
     let wakeLock = null;
     let currentHeading = 0;
+    let lastFirebaseUpdate = 0;
+    const FIREBASE_UPDATE_INTERVAL = 3000;
     let lastHeading = 0;
     let headingHistory = [];
 
-    const lightStyle = [ { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] }, { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] }, { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] } ];
+    const lightStyle = [];
     const darkStyle = [ { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] }, { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] }, { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] } ];
 
     const driverName = localStorage.getItem('carwa_driver_name') || "كابتن";
@@ -567,7 +581,7 @@
 
       map = new google.maps.Map(document.getElementById("map"), {
         center: savedPos, zoom: 16, disableDefaultUI: true,
-        styles: lightStyle, tilt: 0, heading: 0
+        styles: darkStyle, tilt: 0, heading: 0
       });
 
       map.addListener('dragstart', () => {
@@ -598,21 +612,20 @@
       document.addEventListener('click', requestWakeLock);
     }
 
+    function toast(msg) { const el = document.createElement('div'); el.className = 'toast-msg'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 2000); }
     function saveCarPlate() {
       const input = document.getElementById('carPlateInput').value.trim();
-      if (!input) {
-        alert("يرجى إدخال رقم اللوحة");
-        return;
-      }
+      if (!input) { toast("يرجى إدخال رقم اللوحة"); return; }
       carPlate = input;
       localStorage.setItem('carwa_driver_carplate', carPlate);
       document.getElementById('carSettingsModal').style.display = 'none';
+      toast("تم الحفظ ✓");
     }
 
     function toggleTheme() {
       document.body.classList.toggle('light-mode');
       const isLight = document.body.classList.contains('light-mode');
-      map.setOptions({ styles: isLight ? [] : lightStyle });
+      map.setOptions({ styles: isLight ? lightStyle : darkStyle });
       document.querySelector('.theme-btn i').className = isLight ? 'fas fa-moon' : 'fas fa-sun text-warning';
     }
 
@@ -677,13 +690,10 @@
             }
           }
 
-          if (currentOrder) {
+          if (currentOrder && Date.now() - lastFirebaseUpdate > FIREBASE_UPDATE_INTERVAL) {
+            lastFirebaseUpdate = Date.now();
             db.ref('orders/' + currentOrder.id + '/driver_location').set({ 
-              lat, lng, 
-              heading: currentHeading,
-              speed,
-              accuracy,
-              timestamp: Date.now()
+              lat, lng, heading: currentHeading, speed, accuracy, timestamp: Date.now()
             });
           }
         }, err => {
@@ -755,6 +765,7 @@
               m.addListener("click", () => info.open(map, m));
               markers[o.id] = m;
               document.getElementById('orderSound').play().catch(()=>{});
+              if (navigator.vibrate) navigator.vibrate(200);
           }
         });
       });
@@ -782,8 +793,10 @@
             const val = orderSnap.val();
             if (!val || val.status === 'cancelled') {
                 document.getElementById('cancelSound').play().catch(()=>{});
-                alert("⚠️ تنبيه: قام الزبون بإلغاء الرحلة!");
-                orderMonitor.off(); location.reload();
+                if (navigator.vibrate) navigator.vibrate([100,50,100]);
+                document.getElementById('logTxt').innerHTML = '<span class="text-danger fw-bold">⚠️ تم إلغاء الرحلة</span>';
+                orderMonitor.off();
+                setTimeout(() => location.reload(), 1500);
             }
         });
 
@@ -840,6 +853,8 @@
     }
 
     function initChat(id) {
+      if (window._driverChatId === id) return;
+      window._driverChatId = id;
       document.getElementById('chatMsgs').innerHTML = '';
       db.ref('chats/' + id).limitToLast(20).on('child_added', snap => {
         const m = snap.val();
@@ -887,7 +902,7 @@
           db.ref('users/drivers/' + driverPhone).update({ subscriptionExpiry: newExp.toISOString(), isLocked: false });
           db.ref('pins/' + pin).remove();
           location.reload();
-        } else alert("الكود خطأ!");
+        } else toast("الكود غير صحيح");
       });
     }
 

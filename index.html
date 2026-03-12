@@ -3,84 +3,235 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#000">
+  <meta name="theme-color" content="#FF6F00">
   <meta name="description" content="كروة - تطبيق تكسي سريع في العراق">
-  <title>كروة 2026 - الرئيسية</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="كروة">
+  <title>كروة 2026</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="assets/icon-512.png">
+  <link rel="apple-touch-startup-image" href="assets/icon-512.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-96.png">
+
   <link rel="preconnect" href="https://carwa-zaid-default-rtdb.firebaseio.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+
   <style>
-    :root { --primary: #FF6F00; --dark: #2D3436; --light-bg: #000000; }
-    body { background: #000; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Cairo', sans-serif; margin: 0; background-image: radial-gradient(rgba(255, 111, 0, 0.3) 0.5px, transparent 0.5px), radial-gradient(rgba(255, 111, 0, 0.2) 0.5px, transparent 0.5px); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
-    body.loading .gate-card { display: none; }
-    
-    /* شاشة الترحيب (Splash Screen) */
+    :root { --primary: #FF6F00; --dark: #2D3436; }
+
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background-image: radial-gradient(rgba(255,111,0,0.3) 0.5px, transparent 0.5px),
+                        radial-gradient(rgba(255,111,0,0.2) 0.5px, transparent 0.5px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      overflow: hidden;
+    }
+
+    /* ===== SPLASH SCREEN ===== */
     .splash-screen {
       display: flex;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: #000;
       z-index: 9999;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.35s ease-out, visibility 0.35s ease-out;
+      transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
     }
     .splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .splash-screen .splash-logo {
-      max-width: 220px;
-      width: 70%;
-      height: auto;
-      animation: splashPulse 1.2s ease-in-out infinite;
+    .splash-logo { max-width: 200px; width: 60%; animation: splashPulse 1.4s ease-in-out infinite; }
+    .splash-text { color: var(--primary); font-weight: 900; font-size: 1.8rem; margin-top: 18px; }
+    .splash-dots { display: flex; gap: 8px; margin-top: 30px; }
+    .splash-dot {
+      width: 8px; height: 8px; background: var(--primary);
+      border-radius: 50%; animation: dotBounce 1.2s ease-in-out infinite;
     }
-    .splash-screen .splash-text {
-      color: var(--primary);
-      font-weight: 900;
-      font-size: 1.8rem;
-      margin-top: 20px;
-      letter-spacing: -1px;
-    }
+    .splash-dot:nth-child(2) { animation-delay: 0.2s; }
+    .splash-dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes splashPulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.05); opacity: 0.95; }
+      0%,100% { transform: scale(1); } 50% { transform: scale(1.06); }
     }
-    /* splashFadeOut لم يعد مستخدم */
-    
-    .gate-card { background: #000; padding: 40px 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(255, 111, 0, 0.15); text-align: center; width: 90%; max-width: 400px; position: relative; overflow-y: auto; max-height: 90vh; border: 1px solid #222; }
-    .gate-card .page-logo { max-width: 140px; height: auto; margin-bottom: 15px; }
-    h2 { color: var(--primary); font-weight: 900; letter-spacing: -1px; font-size: 2.2rem; }
-    .subtitle { color: #999; font-size: 0.95rem; margin-bottom: 30px; font-weight: 600; }
-    .btn-choice { width: 100%; margin: 15px 0; padding: 15px; border-radius: 18px; font-weight: 700; border: none; transition: 0.2s; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
-    .btn-customer { background: var(--dark); color: white; }
-    .btn-driver { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(255, 111, 0, 0.3); }
-    .btn-choice:active { transform: scale(0.96); }
-    .form-section { display: none; text-align: right; margin-top: 10px; animation: slideUp 0.3s; }
-    .form-label { font-weight: 700; font-size: 0.9rem; color: #bbb; margin-bottom: 5px; display: block; }
-    .form-control { border-radius: 15px; padding: 12px; margin-bottom: 15px; border: 2px solid #333; background: #000; color: #fff; font-family: 'Cairo', sans-serif; font-weight: 600; }
-    .form-control:focus { border-color: var(--primary); background: #111; color: #fff; box-shadow: none; }
-    .form-control::placeholder { color: #666; }
-    .back-btn { cursor: pointer; color: #888; font-size: 0.85rem; margin-bottom: 15px; display: inline-block; font-weight: 700; }
-    
-    #welcomeBackMsg { display: none; background: #000; color: #64b5f6; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; border: 1px solid #333; }
-    .btn-choice:disabled { opacity: 0.7; cursor: not-allowed; }
-    .toast-msg { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 24px; border-radius: 12px; font-weight: 700; z-index: 9999; animation: toastIn 0.3s; }
-    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @keyframes dotBounce {
+      0%,100% { transform: translateY(0); opacity: 0.4; }
+      50% { transform: translateY(-10px); opacity: 1; }
+    }
 
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    /* ===== INSTALL BANNER ===== */
+    .install-banner {
+      position: fixed; bottom: 20px; left: 15px; right: 15px;
+      background: #1a1a1a; border: 1px solid #333;
+      border-radius: 18px; padding: 16px 18px;
+      display: none; align-items: center; gap: 14px;
+      z-index: 8000; box-shadow: 0 8px 30px rgba(255,111,0,0.25);
+      animation: slideUp 0.4s ease-out;
+    }
+    .install-banner.show { display: flex; }
+    .install-banner img { width: 48px; height: 48px; border-radius: 12px; }
+    .install-banner-text { flex: 1; }
+    .install-banner-text strong { color: #fff; display: block; font-size: 0.95rem; }
+    .install-banner-text span { color: #999; font-size: 0.8rem; }
+    .btn-install-now {
+      background: var(--primary); color: #fff; border: none;
+      border-radius: 12px; padding: 10px 18px;
+      font-weight: 700; font-size: 0.85rem; white-space: nowrap; cursor: pointer;
+    }
+    .btn-install-close {
+      background: transparent; border: none; color: #666;
+      font-size: 1.2rem; padding: 4px 8px; cursor: pointer;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    /* ===== iOS INSTALL HINT ===== */
+    .ios-hint {
+      position: fixed; bottom: 20px; left: 15px; right: 15px;
+      background: #1a1a1a; border: 1px solid #333;
+      border-radius: 18px; padding: 18px;
+      display: none; flex-direction: column; align-items: center;
+      z-index: 8000; text-align: center;
+      box-shadow: 0 8px 30px rgba(255,111,0,0.25);
+      animation: slideUp 0.4s ease-out;
+    }
+    .ios-hint.show { display: flex; }
+    .ios-hint p { color: #ccc; font-size: 0.9rem; margin: 8px 0 0 0; }
+    .ios-hint .share-icon { color: var(--primary); font-size: 1.5rem; margin: 5px 0; }
+    .ios-hint-close {
+      position: absolute; top: 12px; left: 14px;
+      background: transparent; border: none; color: #666;
+      font-size: 1.2rem; cursor: pointer;
+    }
+
+    /* ===== CARD ===== */
+    .gate-card {
+      background: #000; padding: 40px 30px; border-radius: 30px;
+      box-shadow: 0 20px 60px rgba(255,111,0,0.15);
+      text-align: center; width: 90%; max-width: 400px;
+      border: 1px solid #222; overflow-y: auto; max-height: 90vh;
+      position: relative; z-index: 1;
+    }
+    .gate-card .page-logo { max-width: 130px; height: auto; margin-bottom: 12px; }
+    h2 { color: var(--primary); font-weight: 900; font-size: 2.2rem; letter-spacing: -1px; }
+    .subtitle { color: #999; font-size: 0.92rem; margin-bottom: 25px; font-weight: 600; }
+
+    .btn-choice {
+      width: 100%; margin: 12px 0; padding: 16px;
+      border-radius: 18px; font-weight: 700; border: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-size: 1.05rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-choice:active { transform: scale(0.96); }
+    .btn-customer { background: var(--dark); color: white; }
+    .btn-driver   { background: var(--primary); color: white; box-shadow: 0 4px 18px rgba(255,111,0,0.35); }
+
+    .form-section { display: none; text-align: right; margin-top: 8px; animation: slideUp 0.3s; }
+    .form-label { font-weight: 700; font-size: 0.88rem; color: #bbb; margin-bottom: 4px; display: block; }
+    .form-control {
+      border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
+      border: 2px solid #333; background: #000; color: #fff;
+      font-family: 'Cairo', sans-serif; font-weight: 600; width: 100%;
+    }
+    .form-control:focus { border-color: var(--primary); background: #111; outline: none; }
+    .form-control::placeholder { color: #555; }
+    .back-btn {
+      cursor: pointer; color: #777; font-size: 0.85rem;
+      margin-bottom: 14px; display: inline-block; font-weight: 700;
+    }
+    .back-btn:hover { color: var(--primary); }
+
+    #welcomeBackMsg {
+      display: none; background: #111; color: #64b5f6;
+      padding: 10px; border-radius: 10px; margin-bottom: 14px;
+      font-weight: bold; font-size: 0.88rem; border: 1px solid #222;
+    }
+
+    /* Offline badge */
+    .offline-badge {
+      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+      background: #c0392b; color: #fff; padding: 6px 18px;
+      border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+      z-index: 9000; display: none; animation: slideDown 0.3s;
+    }
+    .offline-badge.show { display: block; }
+    @keyframes slideDown {
+      from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+      to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+    }
+
+    .toast-msg {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: #222; color: #fff; padding: 12px 24px;
+      border-radius: 12px; font-weight: 700; z-index: 9999;
+      animation: slideUp 0.3s; max-width: 90%; text-align: center;
+    }
+
+    @media (max-width: 360px) {
+      .gate-card { padding: 28px 20px; }
+      h2 { font-size: 1.8rem; }
+      .btn-choice { padding: 14px; font-size: 0.95rem; }
+    }
   </style>
 </head>
-<body> 
+<body>
 
-  <!-- شاشة الترحيب (Splash Screen) -->
-  <div class="splash-screen">
+  <!-- Splash -->
+  <div class="splash-screen" id="splash">
     <img src="assets/logo.png" alt="كروة" class="splash-logo">
     <span class="splash-text">كروة 2026</span>
+    <div class="splash-dots">
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+    </div>
   </div>
 
+  <!-- Offline Badge -->
+  <div class="offline-badge" id="offlineBadge">📵 أنت غير متصل بالإنترنت</div>
+
+  <!-- Install Banner (Android) -->
+  <div class="install-banner" id="installBanner">
+    <img src="assets/logo.png" alt="كروة">
+    <div class="install-banner-text">
+      <strong>ثبّت تطبيق كروة</strong>
+      <span>استخدمه بدون إنترنت وبشكل أسرع</span>
+    </div>
+    <button class="btn-install-now" id="btnInstall">تثبيت</button>
+    <button class="btn-install-close" onclick="dismissInstall()">×</button>
+  </div>
+
+  <!-- iOS Install Hint -->
+  <div class="ios-hint" id="iosHint">
+    <button class="ios-hint-close" onclick="dismissInstall()">×</button>
+    <strong style="color:#fff; font-size:1rem;">ثبّت كروة على شاشتك الرئيسية</strong>
+    <span class="share-icon">⬆️</span>
+    <p>اضغط على زر المشاركة<br>ثم اختر <strong style="color:var(--primary)">"إضافة إلى الشاشة الرئيسية"</strong></p>
+  </div>
+
+  <!-- Main Card -->
   <div class="gate-card">
     <img src="assets/logo.png" alt="كروة" class="page-logo">
     <h2 class="mb-1">كروة 2026</h2>
@@ -90,100 +241,136 @@
 
     <div id="main-menu">
       <button class="btn-choice btn-customer" onclick="showForm('customer')">👤 دخول زبون</button>
-      <button class="btn-choice btn-driver" onclick="showForm('driver')">🚖 دخول كابتن</button>
+      <button class="btn-choice btn-driver"   onclick="showForm('driver')">🚖 دخول كابتن</button>
     </div>
 
     <div id="customer-form" class="form-section">
-      <div class="back-btn" onclick="goBack()">عودة للقائمة الرئيسية</div>
-      <h5 class="mb-3 fw-bold text-white">حساب زبون جديد</h5>
-      
+      <div class="back-btn" onclick="goBack()">← عودة للقائمة</div>
+      <h5 class="mb-3 fw-bold text-white">حساب زبون</h5>
       <label class="form-label">الاسم الكامل *</label>
       <input type="text" id="custName" class="form-control" placeholder="الاسم الثلاثي">
-      
-      <label class="form-label">رقم الهاتف (عراقي) *</label>
+      <label class="form-label">رقم الهاتف *</label>
       <input type="tel" id="custPhone" class="form-control" placeholder="07xxxxxxxxx" maxlength="11">
-      
       <button id="custSubmitBtn" class="btn-choice btn-driver" onclick="registerUser('customer', this)">تسجيل ودخول</button>
     </div>
 
     <div id="driver-form" class="form-section">
-      <div class="back-btn" onclick="goBack()">عودة للقائمة الرئيسية</div>
-      <h5 class="mb-3 fw-bold text-white">تسجيل كابتن جديد</h5>
-      
+      <div class="back-btn" onclick="goBack()">← عودة للقائمة</div>
+      <h5 class="mb-3 fw-bold text-white">تسجيل كابتن</h5>
       <label class="form-label">اسم الكابتن *</label>
       <input type="text" id="drvName" class="form-control" placeholder="الاسم الثلاثي">
-      
-      <label class="form-label">رقم الهاتف (عراقي) *</label>
+      <label class="form-label">رقم الهاتف *</label>
       <input type="tel" id="drvPhone" class="form-control" placeholder="07xxxxxxxxx" maxlength="11">
-      
-      <label class="form-label">صورة شخصية للكابتن *</label>
+      <label class="form-label">صورة شخصية *</label>
       <input type="file" id="drvPhoto" class="form-control" accept="image/*">
-
       <label class="form-label">رقم السيارة *</label>
-      <input type="text" id="drvCarNum" class="form-control" placeholder="مثال: بغداد 12345 أ">
-      
-      <label class="form-label">صورة السيارة (من الأمام) *</label>
+      <input type="text" id="drvCarNum" class="form-control" placeholder="بغداد 12345">
+      <label class="form-label">صورة السيارة *</label>
       <input type="file" id="drvCarPhoto" class="form-control" accept="image/*">
-      
       <button id="drvSubmitBtn" class="btn-choice btn-driver" onclick="registerUser('driver', this)">بدء العمل</button>
     </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
   <script>
-    // إخفاء السبلاش دائماً بعد وقت قصير (بدون اعتماد على Firebase)
+    // ===== PWA: تسجيل Service Worker =====
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('[PWA] SW registered:', reg.scope))
+          .catch(err => console.warn('[PWA] SW failed:', err));
+      });
+    }
+
+    // ===== Splash Hide =====
     window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        document.querySelector('.splash-screen')?.classList.add('hidden');
-      }, 900);
+      setTimeout(() => document.getElementById('splash')?.classList.add('hidden'), 900);
     });
 
-    // تهيئة deviceId محلياً (لا تتطلب اتصال)
+    // ===== Offline Detection =====
+    const offlineBadge = document.getElementById('offlineBadge');
+    function updateOnlineStatus() {
+      if (!navigator.onLine) offlineBadge.classList.add('show');
+      else offlineBadge.classList.remove('show');
+    }
+    window.addEventListener('online',  updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // ===== PWA Install Prompt =====
+    let deferredPrompt = null;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    const installDismissed = localStorage.getItem('carwa_install_dismissed');
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!isStandalone && !installDismissed) {
+        setTimeout(() => document.getElementById('installBanner').classList.add('show'), 2500);
+      }
+    });
+
+    document.getElementById('btnInstall')?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById('installBanner').classList.remove('show');
+      if (outcome === 'accepted') toast('🎉 تم تثبيت التطبيق!');
+    });
+
+    // iOS Hint
+    if (isIOS && !isStandalone && !installDismissed) {
+      setTimeout(() => document.getElementById('iosHint').classList.add('show'), 2500);
+    }
+
+    function dismissInstall() {
+      document.getElementById('installBanner').classList.remove('show');
+      document.getElementById('iosHint').classList.remove('show');
+      localStorage.setItem('carwa_install_dismissed', '1');
+    }
+
+    // ===== Device ID =====
     let deviceId = localStorage.getItem('carwa_device_id');
     if (!deviceId) {
       deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now();
       localStorage.setItem('carwa_device_id', deviceId);
     }
 
-    // إعادة توجيه سريع حسب التخزين المحلي (أسرع شيء)
+    // ===== Auto Redirect =====
     const cachedType = localStorage.getItem('carwa_user_type');
-    if (cachedType === 'customer') { window.location.replace('customer.html'); }
-    else if (cachedType === 'driver') { window.location.replace('driver.html'); }
+    if (cachedType === 'customer') window.location.replace('customer.html');
+    else if (cachedType === 'driver') window.location.replace('driver.html');
 
-    // Firebase اختياري: يستخدم فقط لربط الجهاز وإظهار رسالة "مرحباً بك"
+    // ===== Firebase =====
     let db = null;
     try {
-      const firebaseConfig = {
-        apiKey: "AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc",
-        databaseURL: "https://carwa-zaid-default-rtdb.firebaseio.com",
-        projectId: "carwa-zaid"
-      };
-      if (window.firebase && firebase.apps && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      const cfg = { apiKey:"AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc", databaseURL:"https://carwa-zaid-default-rtdb.firebaseio.com", projectId:"carwa-zaid" };
+      if (window.firebase && !firebase.apps.length) firebase.initializeApp(cfg);
       if (window.firebase) db = firebase.database();
-    } catch (e) { db = null; }
+    } catch(e) {}
 
     (function checkLoginOptional() {
       if (!db) return;
       db.ref('devices/' + deviceId).once('value').then(snap => {
         if (!snap.exists()) return;
-        const savedData = snap.val();
+        const d = snap.val();
         const msgBox = document.getElementById('welcomeBackMsg');
-        msgBox.innerHTML = `مرحباً بك مجدداً <b>${savedData.name}</b>`;
+        msgBox.innerHTML = `مرحباً بك مجدداً <b>${d.name}</b> 👋`;
         msgBox.style.display = 'block';
-        window.boundAccount = savedData;
+        window.boundAccount = d;
       }).catch(() => {});
     })();
 
     function showForm(type) {
       if (window.boundAccount) {
-        if(window.boundAccount.type !== type) {
-          toast("هذا الجهاز مسجل كـ " + (window.boundAccount.type === 'driver' ? 'كابتن' : 'زبون'));
+        if (window.boundAccount.type !== type) {
+          toast('هذا الجهاز مسجل كـ ' + (window.boundAccount.type === 'driver' ? 'كابتن' : 'زبون'));
           type = window.boundAccount.type;
         }
-        forceLogin(window.boundAccount);
-        return;
+        forceLogin(window.boundAccount); return;
       }
       document.getElementById('main-menu').style.display = 'none';
       document.getElementById(type + '-form').style.display = 'block';
@@ -195,129 +382,82 @@
       document.getElementById('main-menu').style.display = 'block';
     }
 
-    function forceLogin(accountData) {
-      localStorage.setItem('carwa_user_type', accountData.type);
-      if (accountData.type === 'customer') {
-        localStorage.setItem('carwa_user_name', accountData.name);
-        localStorage.setItem('carwa_user_phone', accountData.phone);
-        window.location.href = "customer.html";
+    function forceLogin(d) {
+      localStorage.setItem('carwa_user_type', d.type);
+      if (d.type === 'customer') {
+        localStorage.setItem('carwa_user_name', d.name);
+        localStorage.setItem('carwa_user_phone', d.phone);
+        window.location.href = 'customer.html';
       } else {
-        localStorage.setItem('carwa_driver_name', accountData.name);
-        localStorage.setItem('carwa_driver_phone', accountData.phone);
-        window.location.href = "driver.html";
+        localStorage.setItem('carwa_driver_name', d.name);
+        localStorage.setItem('carwa_driver_phone', d.phone);
+        window.location.href = 'driver.html';
       }
     }
 
-    function validateIraqiPhone(phone) {
-        const regex = /^07\d{9}$/; 
-        return regex.test(phone);
-    }
+    function validateIraqiPhone(p) { return /^07\d{9}$/.test(p); }
 
     function toast(msg) {
       const el = document.createElement('div');
-      el.className = 'toast-msg';
-      el.textContent = msg;
+      el.className = 'toast-msg'; el.textContent = msg;
       document.body.appendChild(el);
-      setTimeout(() => el.remove(), 2500);
+      setTimeout(() => el.remove(), 2800);
     }
 
     function registerUser(type, btn) {
-      if (window.boundAccount) {
-        toast("جاري الدخول لحسابك...");
-        forceLogin(window.boundAccount);
-        return;
-      }
+      if (window.boundAccount) { forceLogin(window.boundAccount); return; }
       if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري...'; }
 
       if (type === 'customer') {
-        const name = document.getElementById('custName').value.trim();
+        const name  = document.getElementById('custName').value.trim();
         const phone = document.getElementById('custPhone').value.trim();
-
-        if (!name || !phone) { toast("يرجى ملء جميع الحقول"); if(btn) { btn.disabled = false; btn.innerHTML = 'تسجيل ودخول'; } return; }
-        if (!validateIraqiPhone(phone)) {
-            toast("رقم هاتف عراقي صحيح: 07xxxxxxxxx");
-            if(btn) { btn.disabled = false; btn.innerHTML = 'تسجيل ودخول'; }
-            return;
-        }
+        if (!name || !phone) { toast('يرجى ملء جميع الحقول'); resetBtn(btn, 'تسجيل ودخول'); return; }
+        if (!validateIraqiPhone(phone)) { toast('رقم الهاتف غير صحيح'); resetBtn(btn, 'تسجيل ودخول'); return; }
         saveAndRedirect('customer', name, phone, null);
-
       } else {
-        const name = document.getElementById('drvName').value.trim();
-        const phone = document.getElementById('drvPhone').value.trim();
-        const photoInput = document.getElementById('drvPhoto');
-        const carNum = document.getElementById('drvCarNum').value.trim();
-        const carPhotoInput = document.getElementById('drvCarPhoto');
-
-        if (!name || !phone || !carNum || !photoInput.files[0] || !carPhotoInput.files[0]) { 
-            toast("يرجى ملء جميع الحقول ورفع الصور"); 
-            if(btn) { btn.disabled = false; btn.innerHTML = 'بدء العمل'; }
-            return; 
+        const name       = document.getElementById('drvName').value.trim();
+        const phone      = document.getElementById('drvPhone').value.trim();
+        const photo      = document.getElementById('drvPhoto');
+        const carNum     = document.getElementById('drvCarNum').value.trim();
+        const carPhoto   = document.getElementById('drvCarPhoto');
+        if (!name || !phone || !carNum || !photo.files[0] || !carPhoto.files[0]) {
+          toast('يرجى ملء جميع الحقول ورفع الصور'); resetBtn(btn, 'بدء العمل'); return;
         }
-
-        if (!validateIraqiPhone(phone)) {
-            toast("رقم هاتف عراقي صحيح: 07xxxxxxxxx");
-            if(btn) { btn.disabled = false; btn.innerHTML = 'بدء العمل'; }
-            return;
-        }
-
-        const reader1 = new FileReader(); 
-        reader1.onload = function(e1) {
-            const personalPhotoUrl = e1.target.result;
-            const reader2 = new FileReader(); 
-            reader2.onload = function(e2) {
-                const carPhotoUrl = e2.target.result;
-                saveAndRedirect('driver', name, phone, personalPhotoUrl, carNum, carPhotoUrl);
-            };
-            reader2.readAsDataURL(carPhotoInput.files[0]);
+        if (!validateIraqiPhone(phone)) { toast('رقم الهاتف غير صحيح'); resetBtn(btn, 'بدء العمل'); return; }
+        const r1 = new FileReader();
+        r1.onload = e1 => {
+          const r2 = new FileReader();
+          r2.onload = e2 => saveAndRedirect('driver', name, phone, e1.target.result, carNum, e2.target.result);
+          r2.readAsDataURL(carPhoto.files[0]);
         };
-        reader1.readAsDataURL(photoInput.files[0]);
+        r1.readAsDataURL(photo.files[0]);
       }
     }
 
-    function saveAndRedirect(type, name, phone, photoUrl, carNum = null, carPhotoUrl = null) {
-      localStorage.setItem('carwa_user_type', type);
-      
-      const userData = {
-        name: name,
-        phone: phone,
-        type: type,
-        joined: new Date().toISOString()
-      };
+    function resetBtn(btn, label) {
+      if (btn) { btn.disabled = false; btn.innerHTML = label; }
+    }
 
-      if(type === 'customer') {
+    function saveAndRedirect(type, name, phone, photo, carNum=null, carPhoto=null) {
+      localStorage.setItem('carwa_user_type', type);
+      const userData = { name, phone, type, joined: new Date().toISOString() };
+      if (type === 'customer') {
         localStorage.setItem('carwa_user_name', name);
         localStorage.setItem('carwa_user_phone', phone);
-      } 
-      else {
+      } else {
         localStorage.setItem('carwa_driver_name', name);
         localStorage.setItem('carwa_driver_phone', phone);
-        localStorage.setItem('carwa_driver_photo', photoUrl); 
-        
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 30);
-        
-        userData.photo = photoUrl;
-        userData.carNum = carNum;
-        userData.carPhoto = carPhotoUrl;
-        userData.subscriptionExpiry = expiryDate.toISOString();
-        userData.isLocked = false;
+        const exp = new Date(); exp.setDate(exp.getDate() + 30);
+        userData.photo = photo; userData.carNum = carNum; userData.carPhoto = carPhoto;
+        userData.subscriptionExpiry = exp.toISOString(); userData.isLocked = false;
       }
-
       const updates = {};
       updates[`users/${type}s/${phone}`] = userData;
-      updates[`devices/${deviceId}`] = { type: type, phone: phone, name: name };
-
-      if (!db) { window.location.href = type + ".html"; return; }
-
-      db.ref().update(updates).then(() => {
-        window.location.href = type + ".html";
-      }).catch(() => {
-        toast("حدث خطأ، تحقق من الاتصال وحاول مجدداً");
-        const cBtn = document.getElementById('custSubmitBtn');
-        const dBtn = document.getElementById('drvSubmitBtn');
-        if (cBtn) { cBtn.disabled = false; cBtn.innerHTML = 'تسجيل ودخول'; }
-        if (dBtn) { dBtn.disabled = false; dBtn.innerHTML = 'بدء العمل'; }
-      });
+      updates[`devices/${deviceId}`] = { type, phone, name };
+      if (!db) { window.location.href = type + '.html'; return; }
+      db.ref().update(updates)
+        .then(() => window.location.href = type + '.html')
+        .catch(() => { toast('حدث خطأ - تحقق من الاتصال'); });
     }
   </script>
 </body>

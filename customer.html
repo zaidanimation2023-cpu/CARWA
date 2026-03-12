@@ -2,6 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="كروة">
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
+  <link rel="icon" type="image/png" href="assets/icon-96.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000">
   <title>كروة 2026 - الزبون</title>
@@ -937,5 +945,19 @@
     }
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDVsOdieu4zCgOa9ZBASM05vX-DLeTmkc8&libraries=places&language=ar&callback=initMap"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+    }
+    // Offline detection
+    window.addEventListener('offline', () => {
+      const b = document.createElement('div');
+      b.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#c0392b;color:#fff;padding:8px 20px;border-radius:20px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;font-size:0.85rem;';
+      b.id = 'offline-badge'; b.textContent = '📵 أنت غير متصل';
+      document.body.appendChild(b);
+    });
+    window.addEventListener('online', () => document.getElementById('offline-badge')?.remove());
+  </script>
 </body>
 </html>

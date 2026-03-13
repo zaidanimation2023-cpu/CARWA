@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#FF6F00">
+  <meta name="theme-color" content="#000">
   <meta name="description" content="كروة - تطبيق تكسي سريع في العراق">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,188 +11,233 @@
   <meta name="apple-mobile-web-app-title" content="كروة">
   <title>كروة 2026</title>
 
-  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- Apple Touch Icons -->
   <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="assets/icon-512.png">
   <link rel="apple-touch-startup-image" href="assets/icon-512.png">
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-96.png">
-
   <link rel="preconnect" href="https://carwa-zaid-default-rtdb.firebaseio.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 
   <style>
-    :root { --primary: #FF6F00; --dark: #2D3436; }
-
+    :root { --primary: #FF6F00; --dark: #111; }
     * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 
     body {
       background: #000;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Cairo', sans-serif;
-      margin: 0;
-      background-image: radial-gradient(rgba(255,111,0,0.3) 0.5px, transparent 0.5px),
-                        radial-gradient(rgba(255,111,0,0.2) 0.5px, transparent 0.5px);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cairo', sans-serif; margin: 0;
+      background-image: radial-gradient(rgba(255,111,0,0.25) 0.5px, transparent 0.5px),
+                        radial-gradient(rgba(255,111,0,0.15) 0.5px, transparent 0.5px);
       background-size: 20px 20px;
       background-position: 0 0, 10px 10px;
-      overflow: hidden;
     }
 
-    /* ===== SPLASH SCREEN ===== */
+    /* ===== SPLASH ===== */
     .splash-screen {
-      display: flex;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #000;
-      z-index: 9999;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: flex; position: fixed; top:0; left:0;
+      width:100%; height:100%; background:#000; z-index:9999;
+      flex-direction:column; align-items:center; justify-content:center;
       transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
     }
-    .splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .splash-logo { max-width: 200px; width: 60%; animation: splashPulse 1.4s ease-in-out infinite; }
-    .splash-text { color: var(--primary); font-weight: 900; font-size: 1.8rem; margin-top: 18px; }
-    .splash-dots { display: flex; gap: 8px; margin-top: 30px; }
+    .splash-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+    .splash-logo { max-width:200px; width:60%; animation: splashPulse 1.4s ease-in-out infinite; }
+    .splash-text { color:var(--primary); font-weight:900; font-size:1.8rem; margin-top:18px; }
+    .splash-dots { display:flex; gap:8px; margin-top:30px; }
     .splash-dot {
-      width: 8px; height: 8px; background: var(--primary);
-      border-radius: 50%; animation: dotBounce 1.2s ease-in-out infinite;
+      width:8px; height:8px; background:var(--primary);
+      border-radius:50%; animation: dotBounce 1.2s ease-in-out infinite;
     }
-    .splash-dot:nth-child(2) { animation-delay: 0.2s; }
-    .splash-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes splashPulse {
-      0%,100% { transform: scale(1); } 50% { transform: scale(1.06); }
-    }
+    .splash-dot:nth-child(2) { animation-delay:0.2s; }
+    .splash-dot:nth-child(3) { animation-delay:0.4s; }
+    @keyframes splashPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
     @keyframes dotBounce {
-      0%,100% { transform: translateY(0); opacity: 0.4; }
-      50% { transform: translateY(-10px); opacity: 1; }
+      0%,100%{transform:translateY(0);opacity:.4} 50%{transform:translateY(-10px);opacity:1}
     }
 
     /* ===== INSTALL BANNER ===== */
     .install-banner {
-      position: fixed; bottom: 20px; left: 15px; right: 15px;
-      background: #1a1a1a; border: 1px solid #333;
-      border-radius: 18px; padding: 16px 18px;
-      display: none; align-items: center; gap: 14px;
-      z-index: 8000; box-shadow: 0 8px 30px rgba(255,111,0,0.25);
+      position:fixed; bottom:20px; left:15px; right:15px;
+      background:#1a1a1a; border:1px solid #333; border-radius:18px;
+      padding:16px 18px; display:none; align-items:center; gap:14px;
+      z-index:8000; box-shadow:0 8px 30px rgba(255,111,0,0.25);
       animation: slideUp 0.4s ease-out;
     }
-    .install-banner.show { display: flex; }
-    .install-banner img { width: 48px; height: 48px; border-radius: 12px; }
-    .install-banner-text { flex: 1; }
-    .install-banner-text strong { color: #fff; display: block; font-size: 0.95rem; }
-    .install-banner-text span { color: #999; font-size: 0.8rem; }
+    .install-banner.show { display:flex; }
+    .install-banner img { width:48px; height:48px; border-radius:12px; }
+    .install-banner-text { flex:1; }
+    .install-banner-text strong { color:#fff; display:block; font-size:.95rem; }
+    .install-banner-text span { color:#999; font-size:.8rem; }
     .btn-install-now {
-      background: var(--primary); color: #fff; border: none;
-      border-radius: 12px; padding: 10px 18px;
-      font-weight: 700; font-size: 0.85rem; white-space: nowrap; cursor: pointer;
+      background:var(--primary); color:#fff; border:none;
+      border-radius:12px; padding:10px 18px;
+      font-weight:700; font-size:.85rem; white-space:nowrap; cursor:pointer;
     }
-    .btn-install-close {
-      background: transparent; border: none; color: #666;
-      font-size: 1.2rem; padding: 4px 8px; cursor: pointer;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(40px); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
-    }
+    .btn-install-close { background:transparent; border:none; color:#666; font-size:1.2rem; padding:4px 8px; cursor:pointer; }
 
-    /* ===== iOS INSTALL HINT ===== */
     .ios-hint {
-      position: fixed; bottom: 20px; left: 15px; right: 15px;
-      background: #1a1a1a; border: 1px solid #333;
-      border-radius: 18px; padding: 18px;
-      display: none; flex-direction: column; align-items: center;
-      z-index: 8000; text-align: center;
-      box-shadow: 0 8px 30px rgba(255,111,0,0.25);
-      animation: slideUp 0.4s ease-out;
+      position:fixed; bottom:20px; left:15px; right:15px;
+      background:#1a1a1a; border:1px solid #333; border-radius:18px;
+      padding:18px; display:none; flex-direction:column; align-items:center;
+      z-index:8000; text-align:center;
+      box-shadow:0 8px 30px rgba(255,111,0,0.25); animation:slideUp 0.4s ease-out;
     }
-    .ios-hint.show { display: flex; }
-    .ios-hint p { color: #ccc; font-size: 0.9rem; margin: 8px 0 0 0; }
-    .ios-hint .share-icon { color: var(--primary); font-size: 1.5rem; margin: 5px 0; }
-    .ios-hint-close {
-      position: absolute; top: 12px; left: 14px;
-      background: transparent; border: none; color: #666;
-      font-size: 1.2rem; cursor: pointer;
+    .ios-hint.show { display:flex; }
+    .ios-hint p { color:#ccc; font-size:.9rem; margin:8px 0 0 0; }
+    .ios-hint .share-icon { color:var(--primary); font-size:1.5rem; margin:5px 0; }
+    .ios-hint-close { position:absolute; top:12px; left:14px; background:transparent; border:none; color:#666; font-size:1.2rem; cursor:pointer; }
+
+    @keyframes slideUp { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+    /* ===== OFFLINE ===== */
+    .offline-badge {
+      position:fixed; top:12px; left:50%; transform:translateX(-50%);
+      background:#c0392b; color:#fff; padding:6px 18px;
+      border-radius:20px; font-size:.8rem; font-weight:700;
+      z-index:9000; display:none;
     }
+    .offline-badge.show { display:block; }
 
     /* ===== CARD ===== */
     .gate-card {
-      background: #000; padding: 40px 30px; border-radius: 30px;
-      box-shadow: 0 20px 60px rgba(255,111,0,0.15);
-      text-align: center; width: 90%; max-width: 400px;
-      border: 1px solid #222; overflow-y: auto; max-height: 90vh;
-      position: relative; z-index: 1;
+      background:#000; padding:36px 28px; border-radius:30px;
+      box-shadow:0 20px 60px rgba(255,111,0,0.18);
+      text-align:center; width:92%; max-width:400px;
+      border:1px solid #222; max-height:95vh; overflow-y:auto;
+      position:relative; z-index:1;
     }
-    .gate-card .page-logo { max-width: 130px; height: auto; margin-bottom: 12px; }
-    h2 { color: var(--primary); font-weight: 900; font-size: 2.2rem; letter-spacing: -1px; }
-    .subtitle { color: #999; font-size: 0.92rem; margin-bottom: 25px; font-weight: 600; }
+    .gate-card::-webkit-scrollbar { display:none; }
+    .gate-card .page-logo { max-width:120px; height:auto; margin-bottom:10px; }
+    h2 { color:var(--primary); font-weight:900; font-size:2rem; letter-spacing:-1px; margin:0 0 4px; }
+    .subtitle { color:#888; font-size:.88rem; margin-bottom:20px; font-weight:600; }
 
+    /* ===== STEP INDICATOR ===== */
+    .step-indicator {
+      display:flex; justify-content:center; gap:8px; margin-bottom:20px;
+    }
+    .step-dot {
+      width:8px; height:8px; border-radius:50%;
+      background:#333; transition:all 0.3s;
+    }
+    .step-dot.active { background:var(--primary); transform:scale(1.3); }
+    .step-dot.done { background:#4caf50; }
+
+    /* ===== BUTTONS ===== */
     .btn-choice {
-      width: 100%; margin: 12px 0; padding: 16px;
-      border-radius: 18px; font-weight: 700; border: none;
-      transition: transform 0.15s, box-shadow 0.15s;
-      font-size: 1.05rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width:100%; margin:10px 0; padding:16px;
+      border-radius:18px; font-weight:700; border:none;
+      transition:transform 0.15s, box-shadow 0.15s;
+      font-size:1.05rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; gap:10px;
     }
-    .btn-choice:active { transform: scale(0.96); }
-    .btn-customer { background: var(--dark); color: white; }
-    .btn-driver   { background: var(--primary); color: white; box-shadow: 0 4px 18px rgba(255,111,0,0.35); }
+    .btn-choice:active { transform:scale(0.96); }
+    .btn-customer { background:#1a1a1a; color:white; border:1px solid #333; }
+    .btn-driver   { background:var(--primary); color:white; box-shadow:0 4px 18px rgba(255,111,0,0.35); }
+    .btn-gray     { background:#1e1e1e; color:#aaa; border:1px solid #2a2a2a; }
 
-    .form-section { display: none; text-align: right; margin-top: 8px; animation: slideUp 0.3s; }
-    .form-label { font-weight: 700; font-size: 0.88rem; color: #bbb; margin-bottom: 4px; display: block; }
+    /* ===== FORM ===== */
+    .form-section { display:none; text-align:right; animation:slideUp 0.3s; }
+    .form-label { font-weight:700; font-size:.85rem; color:#bbb; margin-bottom:4px; display:block; }
     .form-control {
-      border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
-      border: 2px solid #333; background: #000; color: #fff;
-      font-family: 'Cairo', sans-serif; font-weight: 600; width: 100%;
+      border-radius:14px; padding:12px 14px; margin-bottom:12px;
+      border:2px solid #333; background:#0a0a0a; color:#fff;
+      font-family:'Cairo',sans-serif; font-weight:600; width:100%;
+      font-size:.95rem;
     }
-    .form-control:focus { border-color: var(--primary); background: #111; outline: none; }
-    .form-control::placeholder { color: #555; }
+    .form-control:focus { border-color:var(--primary); background:#111; outline:none; }
+    .form-control::placeholder { color:#555; }
     .back-btn {
-      cursor: pointer; color: #777; font-size: 0.85rem;
-      margin-bottom: 14px; display: inline-block; font-weight: 700;
+      cursor:pointer; color:#777; font-size:.85rem;
+      margin-bottom:16px; display:inline-block; font-weight:700;
     }
-    .back-btn:hover { color: var(--primary); }
+    .back-btn:hover { color:var(--primary); }
 
-    #welcomeBackMsg {
-      display: none; background: #111; color: #64b5f6;
-      padding: 10px; border-radius: 10px; margin-bottom: 14px;
-      font-weight: bold; font-size: 0.88rem; border: 1px solid #222;
+    /* ===== WELCOME BACK CARD ===== */
+    .welcome-card {
+      background:linear-gradient(135deg, #0d1117, #161b22);
+      border:1px solid #30363d; border-radius:20px;
+      padding:20px; margin-bottom:16px;
+      display:none; text-align:right;
+      animation:slideUp 0.4s;
+    }
+    .welcome-card.show { display:block; }
+    .welcome-card .wc-role {
+      font-size:.75rem; font-weight:700; padding:3px 10px;
+      border-radius:20px; display:inline-block; margin-bottom:8px;
+    }
+    .wc-role.customer { background:rgba(33,150,243,0.2); color:#64b5f6; }
+    .wc-role.driver   { background:rgba(255,111,0,0.2);  color:var(--primary); }
+    .welcome-card .wc-name { color:#fff; font-weight:900; font-size:1.1rem; margin:0 0 4px; }
+    .welcome-card .wc-phone { color:#666; font-size:.82rem; }
+    .welcome-card .wc-actions { display:flex; gap:8px; margin-top:14px; }
+    .btn-wc-enter {
+      flex:1; padding:12px; border-radius:14px; border:none;
+      background:var(--primary); color:#fff; font-weight:700;
+      font-size:.9rem; cursor:pointer;
+    }
+    .btn-wc-switch {
+      padding:12px 16px; border-radius:14px; border:1px solid #333;
+      background:transparent; color:#888; font-size:.82rem; cursor:pointer;
+      white-space:nowrap;
     }
 
-    /* Offline badge */
-    .offline-badge {
-      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-      background: #c0392b; color: #fff; padding: 6px 18px;
-      border-radius: 20px; font-size: 0.8rem; font-weight: 700;
-      z-index: 9000; display: none; animation: slideDown 0.3s;
+    /* ===== PHONE LOGIN FORM ===== */
+    .phone-login-box {
+      background:#0a0a0a; border:1px solid #222; border-radius:20px;
+      padding:20px; margin-bottom:16px; display:none;
+      animation:slideUp 0.3s;
     }
-    .offline-badge.show { display: block; }
-    @keyframes slideDown {
-      from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-      to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+    .phone-login-box.show { display:block; }
+    .phone-login-box h6 { color:#fff; font-weight:700; margin-bottom:14px; font-size:.95rem; }
+    .phone-search-row { display:flex; gap:8px; }
+    .phone-search-row input {
+      flex:1; border-radius:14px; padding:12px 14px;
+      border:2px solid #333; background:#111; color:#fff;
+      font-family:'Cairo',sans-serif; font-weight:600; font-size:.95rem;
+    }
+    .phone-search-row input:focus { border-color:var(--primary); outline:none; }
+    .btn-search-phone {
+      padding:12px 18px; border-radius:14px; border:none;
+      background:var(--primary); color:#fff; font-weight:700;
+      cursor:pointer; white-space:nowrap;
+    }
+    .phone-result {
+      margin-top:12px; padding:14px; border-radius:14px;
+      border:1px solid #2a2a2a; background:#111;
+      display:none; animation:slideUp 0.25s;
+    }
+    .phone-result.show { display:block; }
+    .phone-result .pr-name { color:#fff; font-weight:700; font-size:.95rem; }
+    .phone-result .pr-role { font-size:.75rem; color:#888; margin-top:2px; }
+    .btn-quick-login {
+      width:100%; margin-top:10px; padding:12px; border-radius:14px; border:none;
+      background:var(--primary); color:#fff; font-weight:700; cursor:pointer;
     }
 
+    /* ===== DIVIDER ===== */
+    .or-divider {
+      display:flex; align-items:center; gap:10px;
+      margin:16px 0; color:#444; font-size:.82rem;
+    }
+    .or-divider::before, .or-divider::after {
+      content:''; flex:1; border-top:1px solid #222;
+    }
+
+    /* ===== TOAST ===== */
     .toast-msg {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: #222; color: #fff; padding: 12px 24px;
-      border-radius: 12px; font-weight: 700; z-index: 9999;
-      animation: slideUp 0.3s; max-width: 90%; text-align: center;
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:#222; color:#fff; padding:12px 24px;
+      border-radius:12px; font-weight:700; z-index:9999;
+      animation:slideUp 0.3s; max-width:90%; text-align:center;
+      border:1px solid #333;
     }
 
-    @media (max-width: 360px) {
-      .gate-card { padding: 28px 20px; }
-      h2 { font-size: 1.8rem; }
-      .btn-choice { padding: 14px; font-size: 0.95rem; }
+    @media (max-width:360px) {
+      .gate-card { padding:24px 18px; }
+      h2 { font-size:1.7rem; }
     }
   </style>
 </head>
@@ -209,54 +254,90 @@
     </div>
   </div>
 
-  <!-- Offline Badge -->
-  <div class="offline-badge" id="offlineBadge">📵 أنت غير متصل بالإنترنت</div>
+  <!-- Offline -->
+  <div class="offline-badge" id="offlineBadge">📵 أنت غير متصل</div>
 
-  <!-- Install Banner (Android) -->
+  <!-- Install Banner Android -->
   <div class="install-banner" id="installBanner">
     <img src="assets/logo.png" alt="كروة">
     <div class="install-banner-text">
       <strong>ثبّت تطبيق كروة</strong>
-      <span>استخدمه بدون إنترنت وبشكل أسرع</span>
+      <span>أسرع وبدون متصفح</span>
     </div>
     <button class="btn-install-now" id="btnInstall">تثبيت</button>
     <button class="btn-install-close" onclick="dismissInstall()">×</button>
   </div>
 
-  <!-- iOS Install Hint -->
+  <!-- iOS Hint -->
   <div class="ios-hint" id="iosHint">
     <button class="ios-hint-close" onclick="dismissInstall()">×</button>
-    <strong style="color:#fff; font-size:1rem;">ثبّت كروة على شاشتك الرئيسية</strong>
+    <strong style="color:#fff;font-size:1rem;">ثبّت كروة على شاشتك</strong>
     <span class="share-icon">⬆️</span>
-    <p>اضغط على زر المشاركة<br>ثم اختر <strong style="color:var(--primary)">"إضافة إلى الشاشة الرئيسية"</strong></p>
+    <p>اضغط زر المشاركة<br>ثم <strong style="color:var(--primary)">«إضافة إلى الشاشة الرئيسية»</strong></p>
   </div>
 
   <!-- Main Card -->
-  <div class="gate-card">
+  <div class="gate-card" id="gateCard">
     <img src="assets/logo.png" alt="كروة" class="page-logo">
-    <h2 class="mb-1">كروة 2026</h2>
+    <h2>كروة 2026</h2>
     <p class="subtitle">وجهتك التالية.. تبدأ من هنا</p>
 
-    <div id="welcomeBackMsg"></div>
-
-    <div id="main-menu">
-      <button class="btn-choice btn-customer" onclick="showForm('customer')">👤 دخول زبون</button>
-      <button class="btn-choice btn-driver"   onclick="showForm('driver')">🚖 دخول كابتن</button>
+    <!-- بطاقة الترحيب (جهاز معروف) -->
+    <div class="welcome-card" id="welcomeCard">
+      <span class="wc-role" id="wcRole">زبون</span>
+      <div class="wc-name" id="wcName">اسم المستخدم</div>
+      <div class="wc-phone" id="wcPhone">رقم الهاتف</div>
+      <div class="wc-actions">
+        <button class="btn-wc-enter" id="btnWcEnter" onclick="quickEnter()">
+          ▶ دخول مباشر
+        </button>
+        <button class="btn-wc-switch" onclick="switchAccount()">تغيير حساب</button>
+      </div>
     </div>
 
+    <!-- البحث برقم الهاتف (جهاز جديد) -->
+    <div class="phone-login-box" id="phoneLoginBox">
+      <h6>🔍 تسجيل دخول بالهاتف</h6>
+      <div class="phone-search-row">
+        <input type="tel" id="searchPhone" placeholder="07xxxxxxxxx" maxlength="11"
+               onkeypress="if(event.key==='Enter') searchByPhone()">
+        <button class="btn-search-phone" onclick="searchByPhone()">بحث</button>
+      </div>
+      <div class="phone-result" id="phoneResult">
+        <div class="pr-name" id="prName"></div>
+        <div class="pr-role" id="prRole"></div>
+        <button class="btn-quick-login" onclick="loginFromSearch()">✓ دخول</button>
+      </div>
+    </div>
+
+    <!-- القائمة الرئيسية -->
+    <div id="main-menu">
+      <div class="or-divider" id="orDivider" style="display:none">أو سجل حساباً جديداً</div>
+      <button class="btn-choice btn-customer" onclick="showForm('customer')">
+        👤 تسجيل زبون جديد
+      </button>
+      <button class="btn-choice btn-driver" onclick="showForm('driver')">
+        🚖 تسجيل كابتن جديد
+      </button>
+    </div>
+
+    <!-- نموذج الزبون -->
     <div id="customer-form" class="form-section">
-      <div class="back-btn" onclick="goBack()">← عودة للقائمة</div>
-      <h5 class="mb-3 fw-bold text-white">حساب زبون</h5>
+      <div class="back-btn" onclick="goBack()">← عودة</div>
+      <h5 class="mb-3 fw-bold text-white">📋 بيانات الزبون</h5>
       <label class="form-label">الاسم الكامل *</label>
       <input type="text" id="custName" class="form-control" placeholder="الاسم الثلاثي">
       <label class="form-label">رقم الهاتف *</label>
       <input type="tel" id="custPhone" class="form-control" placeholder="07xxxxxxxxx" maxlength="11">
-      <button id="custSubmitBtn" class="btn-choice btn-driver" onclick="registerUser('customer', this)">تسجيل ودخول</button>
+      <button id="custSubmitBtn" class="btn-choice btn-driver" onclick="registerUser('customer', this)">
+        تسجيل ودخول
+      </button>
     </div>
 
+    <!-- نموذج الكابتن -->
     <div id="driver-form" class="form-section">
-      <div class="back-btn" onclick="goBack()">← عودة للقائمة</div>
-      <h5 class="mb-3 fw-bold text-white">تسجيل كابتن</h5>
+      <div class="back-btn" onclick="goBack()">← عودة</div>
+      <h5 class="mb-3 fw-bold text-white">🚖 بيانات الكابتن</h5>
       <label class="form-label">اسم الكابتن *</label>
       <input type="text" id="drvName" class="form-control" placeholder="الاسم الثلاثي">
       <label class="form-label">رقم الهاتف *</label>
@@ -267,198 +348,362 @@
       <input type="text" id="drvCarNum" class="form-control" placeholder="بغداد 12345">
       <label class="form-label">صورة السيارة *</label>
       <input type="file" id="drvCarPhoto" class="form-control" accept="image/*">
-      <button id="drvSubmitBtn" class="btn-choice btn-driver" onclick="registerUser('driver', this)">بدء العمل</button>
+      <button id="drvSubmitBtn" class="btn-choice btn-driver" onclick="registerUser('driver', this)">
+        بدء العمل
+      </button>
     </div>
-  </div>
+
+  </div><!-- /gate-card -->
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script>
-    // ===== PWA: تسجيل Service Worker =====
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('[PWA] SW registered:', reg.scope))
-          .catch(err => console.warn('[PWA] SW failed:', err));
-      });
-    }
+  // ============================================================
+  //  كروة 2026 — نظام تسجيل الدخول الذكي
+  //  يتذكر الجهاز + تسجيل دخول بالهاتف على أي جهاز
+  // ============================================================
 
-    // ===== Splash Hide =====
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => document.getElementById('splash')?.classList.add('hidden'), 900);
+  // ===== PWA: Service Worker =====
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(r => console.log('[SW]', r.scope))
+        .catch(e => console.warn('[SW]', e));
     });
+  }
 
-    // ===== Offline Detection =====
-    const offlineBadge = document.getElementById('offlineBadge');
-    function updateOnlineStatus() {
-      if (!navigator.onLine) offlineBadge.classList.add('show');
-      else offlineBadge.classList.remove('show');
-    }
-    window.addEventListener('online',  updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
+  // ===== Splash =====
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => document.getElementById('splash')?.classList.add('hidden'), 900);
+  });
 
-    // ===== PWA Install Prompt =====
-    let deferredPrompt = null;
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    const installDismissed = localStorage.getItem('carwa_install_dismissed');
+  // ===== Offline =====
+  const offlineBadge = document.getElementById('offlineBadge');
+  function updateOnline() { offlineBadge.classList.toggle('show', !navigator.onLine); }
+  window.addEventListener('online', updateOnline);
+  window.addEventListener('offline', updateOnline);
+  updateOnline();
 
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-      if (!isStandalone && !installDismissed) {
-        setTimeout(() => document.getElementById('installBanner').classList.add('show'), 2500);
-      }
-    });
+  // ===== PWA Install =====
+  let deferredPrompt = null;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const installDismissed = localStorage.getItem('carwa_install_dismissed');
 
-    document.getElementById('btnInstall')?.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      document.getElementById('installBanner').classList.remove('show');
-      if (outcome === 'accepted') toast('🎉 تم تثبيت التطبيق!');
-    });
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredPrompt = e;
+    if (!isStandalone && !installDismissed)
+      setTimeout(() => document.getElementById('installBanner').classList.add('show'), 2500);
+  });
+  document.getElementById('btnInstall')?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById('installBanner').classList.remove('show');
+    if (outcome === 'accepted') toast('🎉 تم تثبيت التطبيق!');
+  });
+  if (isIOS && !isStandalone && !installDismissed)
+    setTimeout(() => document.getElementById('iosHint').classList.add('show'), 2500);
 
-    // iOS Hint
-    if (isIOS && !isStandalone && !installDismissed) {
-      setTimeout(() => document.getElementById('iosHint').classList.add('show'), 2500);
-    }
+  function dismissInstall() {
+    document.getElementById('installBanner').classList.remove('show');
+    document.getElementById('iosHint').classList.remove('show');
+    localStorage.setItem('carwa_install_dismissed', '1');
+  }
 
-    function dismissInstall() {
-      document.getElementById('installBanner').classList.remove('show');
-      document.getElementById('iosHint').classList.remove('show');
-      localStorage.setItem('carwa_install_dismissed', '1');
-    }
+  // ===== Firebase =====
+  let db = null;
+  try {
+    const cfg = {
+      apiKey: "AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc",
+      databaseURL: "https://carwa-zaid-default-rtdb.firebaseio.com",
+      projectId: "carwa-zaid"
+    };
+    if (window.firebase && !firebase.apps.length) firebase.initializeApp(cfg);
+    if (window.firebase) db = firebase.database();
+  } catch(e) {}
 
-    // ===== Device ID =====
-    let deviceId = localStorage.getItem('carwa_device_id');
-    if (!deviceId) {
-      deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now();
-      localStorage.setItem('carwa_device_id', deviceId);
-    }
+  // ===== Device ID =====
+  let deviceId = localStorage.getItem('carwa_device_id');
+  if (!deviceId) {
+    deviceId = 'dev_' + Math.random().toString(36).substr(2,9) + Date.now();
+    localStorage.setItem('carwa_device_id', deviceId);
+  }
 
-    // ===== Auto Redirect =====
+  // ===== حالة تسجيل الدخول الحالية =====
+  let _foundAccount = null; // الحساب المُعثور عليه بالبحث أو الجهاز
+
+  // ============================================================
+  //  ▶ نقطة البداية — فحص الجهاز أو إعادة التوجيه
+  // ============================================================
+  async function init() {
+    // 1) إذا كان الجهاز مسجلاً في localStorage → توجيه مباشر
     const cachedType = localStorage.getItem('carwa_user_type');
-    if (cachedType === 'customer') window.location.replace('customer.html');
-    else if (cachedType === 'driver') window.location.replace('driver.html');
+    const cachedName = localStorage.getItem('carwa_user_name') || localStorage.getItem('carwa_driver_name');
+    const cachedPhone = localStorage.getItem('carwa_user_phone') || localStorage.getItem('carwa_driver_phone');
 
-    // ===== Firebase =====
-    let db = null;
+    if (cachedType && cachedPhone) {
+      // تحقق سريع من Firebase أن الحساب لا يزال موجوداً وغير محظور
+      if (db) {
+        try {
+          const snap = await db.ref(`users/${cachedType}s/${cachedPhone}`).once('value');
+          if (snap.exists()) {
+            const u = snap.val();
+            // تحقق من الحظر للكابتن
+            if (cachedType === 'driver' && u.isLocked) {
+              toast('⛔ حسابك موقوف مؤقتاً');
+              clearLocalSession();
+              showPhoneLogin();
+              return;
+            }
+            // كل شيء تمام — توجيه مباشر
+            window.location.replace(cachedType + '.html');
+            return;
+          }
+        } catch(e) {
+          // لا إنترنت → اعتمد على localStorage
+          window.location.replace(cachedType + '.html');
+          return;
+        }
+      } else {
+        window.location.replace(cachedType + '.html');
+        return;
+      }
+    }
+
+    // 2) جهاز جديد — تحقق من Firebase إذا الجهاز مرتبط بحساب
+    if (db) {
+      try {
+        const snap = await db.ref('devices/' + deviceId).once('value');
+        if (snap.exists()) {
+          const d = snap.val();
+          // جلب بيانات المستخدم الكاملة
+          const userSnap = await db.ref(`users/${d.type}s/${d.phone}`).once('value');
+          if (userSnap.exists()) {
+            const u = userSnap.val();
+            showWelcomeCard({ ...u, type: d.type });
+            return;
+          }
+        }
+      } catch(e) {}
+    }
+
+    // 3) جهاز جديد كليًا — عرض خيار البحث برقم الهاتف + التسجيل
+    showPhoneLogin();
+  }
+
+  // ============================================================
+  //  عرض بطاقة الترحيب (جهاز معروف)
+  // ============================================================
+  function showWelcomeCard(account) {
+    _foundAccount = account;
+    const roleAr = account.type === 'driver' ? 'كابتن' : 'زبون';
+    document.getElementById('wcRole').textContent = roleAr;
+    document.getElementById('wcRole').className = 'wc-role ' + account.type;
+    document.getElementById('wcName').textContent = account.name || '';
+    document.getElementById('wcPhone').textContent = account.phone || '';
+    document.getElementById('btnWcEnter').textContent = `▶ دخول كـ${roleAr}`;
+    document.getElementById('welcomeCard').classList.add('show');
+    document.getElementById('phoneLoginBox').style.display = 'none';
+    document.getElementById('orDivider').style.display = 'flex';
+    document.getElementById('orDivider').textContent = 'أو سجّل حساباً مختلفاً';
+  }
+
+  // ============================================================
+  //  عرض خانة البحث برقم الهاتف
+  // ============================================================
+  function showPhoneLogin() {
+    document.getElementById('phoneLoginBox').classList.add('show');
+    document.getElementById('orDivider').style.display = 'flex';
+  }
+
+  // ============================================================
+  //  دخول مباشر (من بطاقة الترحيب)
+  // ============================================================
+  function quickEnter() {
+    if (!_foundAccount) return;
+    applySession(_foundAccount);
+  }
+
+  // ============================================================
+  //  تغيير الحساب — إخفاء بطاقة الترحيب وعرض البحث
+  // ============================================================
+  function switchAccount() {
+    clearLocalSession();
+    _foundAccount = null;
+    document.getElementById('welcomeCard').classList.remove('show');
+    document.getElementById('phoneLoginBox').classList.add('show');
+    document.getElementById('orDivider').style.display = 'flex';
+    document.getElementById('orDivider').textContent = 'أو سجّل حساباً جديداً';
+    document.getElementById('searchPhone').focus();
+  }
+
+  // ============================================================
+  //  البحث برقم الهاتف في Firebase
+  // ============================================================
+  let _searchResult = null;
+  async function searchByPhone() {
+    const phone = document.getElementById('searchPhone').value.trim();
+    if (!validatePhone(phone)) { toast('رقم الهاتف غير صحيح (07xxxxxxxxx)'); return; }
+    if (!db) { toast('لا يوجد اتصال بالإنترنت'); return; }
+
+    const btn = document.querySelector('.btn-search-phone');
+    btn.textContent = '...'; btn.disabled = true;
+
     try {
-      const cfg = { apiKey:"AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc", databaseURL:"https://carwa-zaid-default-rtdb.firebaseio.com", projectId:"carwa-zaid" };
-      if (window.firebase && !firebase.apps.length) firebase.initializeApp(cfg);
-      if (window.firebase) db = firebase.database();
-    } catch(e) {}
+      // ابحث في الزبائن أولاً ثم الكباتن
+      let found = null;
+      const custSnap = await db.ref(`users/customers/${phone}`).once('value');
+      if (custSnap.exists()) { found = { ...custSnap.val(), type: 'customer' }; }
+      if (!found) {
+        const drvSnap = await db.ref(`users/drivers/${phone}`).once('value');
+        if (drvSnap.exists()) { found = { ...drvSnap.val(), type: 'driver' }; }
+      }
 
-    (function checkLoginOptional() {
-      if (!db) return;
-      db.ref('devices/' + deviceId).once('value').then(snap => {
-        if (!snap.exists()) return;
-        const d = snap.val();
-        const msgBox = document.getElementById('welcomeBackMsg');
-        msgBox.innerHTML = `مرحباً بك مجدداً <b>${d.name}</b> 👋`;
-        msgBox.style.display = 'block';
-        window.boundAccount = d;
+      if (found) {
+        _searchResult = found;
+        document.getElementById('prName').textContent = found.name || 'مستخدم';
+        document.getElementById('prRole').textContent =
+          (found.type === 'driver' ? '🚖 كابتن' : '👤 زبون') +
+          (found.type === 'driver' && found.carNum ? ' · ' + found.carNum : '');
+        document.getElementById('phoneResult').classList.add('show');
+      } else {
+        toast('لم يُعثر على هذا الرقم — هل تريد إنشاء حساب جديد؟');
+        document.getElementById('phoneResult').classList.remove('show');
+      }
+    } catch(e) {
+      toast('خطأ في البحث — تحقق من الاتصال');
+    }
+
+    btn.textContent = 'بحث'; btn.disabled = false;
+  }
+
+  // ============================================================
+  //  تسجيل الدخول من نتيجة البحث
+  // ============================================================
+  function loginFromSearch() {
+    if (!_searchResult) return;
+    if (_searchResult.type === 'driver' && _searchResult.isLocked) {
+      toast('⛔ حسابك موقوف مؤقتاً — تواصل مع الإدارة');
+      return;
+    }
+    applySession(_searchResult);
+  }
+
+  // ============================================================
+  //  تطبيق الجلسة وحفظها في localStorage + Firebase
+  // ============================================================
+  function applySession(account) {
+    localStorage.setItem('carwa_user_type', account.type);
+    if (account.type === 'customer') {
+      localStorage.setItem('carwa_user_name',  account.name  || '');
+      localStorage.setItem('carwa_user_phone', account.phone || '');
+    } else {
+      localStorage.setItem('carwa_driver_name',     account.name     || '');
+      localStorage.setItem('carwa_driver_phone',    account.phone    || '');
+      localStorage.setItem('carwa_driver_carplate', account.carNum   || '');
+    }
+    // ربط الجهاز بالحساب في Firebase (للمرة القادمة)
+    if (db) {
+      db.ref('devices/' + deviceId).set({
+        type:  account.type,
+        phone: account.phone,
+        name:  account.name,
+        lastLogin: Date.now()
       }).catch(() => {});
-    })();
+    }
+    window.location.href = account.type + '.html';
+  }
 
-    function showForm(type) {
-      if (window.boundAccount) {
-        if (window.boundAccount.type !== type) {
-          toast('هذا الجهاز مسجل كـ ' + (window.boundAccount.type === 'driver' ? 'كابتن' : 'زبون'));
-          type = window.boundAccount.type;
-        }
-        forceLogin(window.boundAccount); return;
+  // ============================================================
+  //  مسح الجلسة المحلية
+  // ============================================================
+  function clearLocalSession() {
+    ['carwa_user_type','carwa_user_name','carwa_user_phone',
+     'carwa_driver_name','carwa_driver_phone','carwa_driver_carplate'].forEach(k => localStorage.removeItem(k));
+  }
+
+  // ============================================================
+  //  نماذج التسجيل الجديد
+  // ============================================================
+  function showForm(type) {
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('welcomeCard').classList.remove('show');
+    document.getElementById('phoneLoginBox').classList.remove('show');
+    document.getElementById(type + '-form').style.display = 'block';
+  }
+
+  function goBack() {
+    document.getElementById('customer-form').style.display = 'none';
+    document.getElementById('driver-form').style.display = 'none';
+    document.getElementById('main-menu').style.display = 'block';
+    if (_foundAccount) document.getElementById('welcomeCard').classList.add('show');
+    else document.getElementById('phoneLoginBox').classList.add('show');
+  }
+
+  function registerUser(type, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري...'; }
+
+    if (type === 'customer') {
+      const name  = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+      if (!name || !phone) { toast('يرجى ملء جميع الحقول'); resetBtn(btn,'تسجيل ودخول'); return; }
+      if (!validatePhone(phone)) { toast('رقم الهاتف غير صحيح'); resetBtn(btn,'تسجيل ودخول'); return; }
+      saveAndRedirect('customer', name, phone, null);
+    } else {
+      const name     = document.getElementById('drvName').value.trim();
+      const phone    = document.getElementById('drvPhone').value.trim();
+      const photo    = document.getElementById('drvPhoto');
+      const carNum   = document.getElementById('drvCarNum').value.trim();
+      const carPhoto = document.getElementById('drvCarPhoto');
+      if (!name || !phone || !carNum || !photo.files[0] || !carPhoto.files[0]) {
+        toast('يرجى ملء جميع الحقول ورفع الصور'); resetBtn(btn,'بدء العمل'); return;
       }
-      document.getElementById('main-menu').style.display = 'none';
-      document.getElementById(type + '-form').style.display = 'block';
+      if (!validatePhone(phone)) { toast('رقم الهاتف غير صحيح'); resetBtn(btn,'بدء العمل'); return; }
+      const r1 = new FileReader();
+      r1.onload = e1 => {
+        const r2 = new FileReader();
+        r2.onload = e2 => saveAndRedirect('driver', name, phone, e1.target.result, carNum, e2.target.result);
+        r2.readAsDataURL(carPhoto.files[0]);
+      };
+      r1.readAsDataURL(photo.files[0]);
     }
+  }
 
-    function goBack() {
-      document.getElementById('customer-form').style.display = 'none';
-      document.getElementById('driver-form').style.display = 'none';
-      document.getElementById('main-menu').style.display = 'block';
+  function saveAndRedirect(type, name, phone, photo, carNum=null, carPhoto=null) {
+    const userData = { name, phone, type, joined: new Date().toISOString() };
+    if (type === 'driver') {
+      const exp = new Date(); exp.setDate(exp.getDate() + 30);
+      Object.assign(userData, { photo, carNum, carPhoto, subscriptionExpiry: exp.toISOString(), isLocked: false });
     }
+    const updates = {};
+    updates[`users/${type}s/${phone}`] = userData;
+    updates[`devices/${deviceId}`] = { type, phone, name, lastLogin: Date.now() };
 
-    function forceLogin(d) {
-      localStorage.setItem('carwa_user_type', d.type);
-      if (d.type === 'customer') {
-        localStorage.setItem('carwa_user_name', d.name);
-        localStorage.setItem('carwa_user_phone', d.phone);
-        window.location.href = 'customer.html';
-      } else {
-        localStorage.setItem('carwa_driver_name', d.name);
-        localStorage.setItem('carwa_driver_phone', d.phone);
-        window.location.href = 'driver.html';
-      }
-    }
+    if (!db) { applySession(userData); return; }
+    db.ref().update(updates)
+      .then(() => applySession(userData))
+      .catch(() => { toast('خطأ — تحقق من الاتصال'); });
+  }
 
-    function validateIraqiPhone(p) { return /^07\d{9}$/.test(p); }
+  // ============================================================
+  //  مساعدات
+  // ============================================================
+  function validatePhone(p) { return /^07\d{9}$/.test(p); }
 
-    function toast(msg) {
-      const el = document.createElement('div');
-      el.className = 'toast-msg'; el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 2800);
-    }
+  function resetBtn(btn, label) { if (btn) { btn.disabled=false; btn.innerHTML=label; } }
 
-    function registerUser(type, btn) {
-      if (window.boundAccount) { forceLogin(window.boundAccount); return; }
-      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري...'; }
+  function toast(msg) {
+    document.querySelectorAll('.toast-msg').forEach(e => e.remove());
+    const el = document.createElement('div');
+    el.className = 'toast-msg'; el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2800);
+  }
 
-      if (type === 'customer') {
-        const name  = document.getElementById('custName').value.trim();
-        const phone = document.getElementById('custPhone').value.trim();
-        if (!name || !phone) { toast('يرجى ملء جميع الحقول'); resetBtn(btn, 'تسجيل ودخول'); return; }
-        if (!validateIraqiPhone(phone)) { toast('رقم الهاتف غير صحيح'); resetBtn(btn, 'تسجيل ودخول'); return; }
-        saveAndRedirect('customer', name, phone, null);
-      } else {
-        const name       = document.getElementById('drvName').value.trim();
-        const phone      = document.getElementById('drvPhone').value.trim();
-        const photo      = document.getElementById('drvPhoto');
-        const carNum     = document.getElementById('drvCarNum').value.trim();
-        const carPhoto   = document.getElementById('drvCarPhoto');
-        if (!name || !phone || !carNum || !photo.files[0] || !carPhoto.files[0]) {
-          toast('يرجى ملء جميع الحقول ورفع الصور'); resetBtn(btn, 'بدء العمل'); return;
-        }
-        if (!validateIraqiPhone(phone)) { toast('رقم الهاتف غير صحيح'); resetBtn(btn, 'بدء العمل'); return; }
-        const r1 = new FileReader();
-        r1.onload = e1 => {
-          const r2 = new FileReader();
-          r2.onload = e2 => saveAndRedirect('driver', name, phone, e1.target.result, carNum, e2.target.result);
-          r2.readAsDataURL(carPhoto.files[0]);
-        };
-        r1.readAsDataURL(photo.files[0]);
-      }
-    }
-
-    function resetBtn(btn, label) {
-      if (btn) { btn.disabled = false; btn.innerHTML = label; }
-    }
-
-    function saveAndRedirect(type, name, phone, photo, carNum=null, carPhoto=null) {
-      localStorage.setItem('carwa_user_type', type);
-      const userData = { name, phone, type, joined: new Date().toISOString() };
-      if (type === 'customer') {
-        localStorage.setItem('carwa_user_name', name);
-        localStorage.setItem('carwa_user_phone', phone);
-      } else {
-        localStorage.setItem('carwa_driver_name', name);
-        localStorage.setItem('carwa_driver_phone', phone);
-        const exp = new Date(); exp.setDate(exp.getDate() + 30);
-        userData.photo = photo; userData.carNum = carNum; userData.carPhoto = carPhoto;
-        userData.subscriptionExpiry = exp.toISOString(); userData.isLocked = false;
-      }
-      const updates = {};
-      updates[`users/${type}s/${phone}`] = userData;
-      updates[`devices/${deviceId}`] = { type, phone, name };
-      if (!db) { window.location.href = type + '.html'; return; }
-      db.ref().update(updates)
-        .then(() => window.location.href = type + '.html')
-        .catch(() => { toast('حدث خطأ - تحقق من الاتصال'); });
-    }
+  // ===== بدء التشغيل =====
+  init();
   </script>
 </body>
 </html>

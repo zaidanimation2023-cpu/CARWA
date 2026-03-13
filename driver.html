@@ -282,13 +282,113 @@
   </div>
 </div>
 
-<audio id="orderSound"  src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-<audio id="cancelSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-<audio id="chatSound"   src="https://assets.mixkit.co/active_storage/sfx/1717/1717-preview.mp3"></audio>
+<!-- ===== نظام الإشعارات الصوتية كروة - السائق ===== -->
+<script>
+// ============================================================
+//  🔔 كروة - نظام الإشعارات الصوتية الشامل (السائق)
+// ============================================================
+const CarwaNotifications = (() => {
+  let audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function playTone(frequencies, durations, type = 'sine', vol = 0.65) {
+    try {
+      const ctx = getCtx();
+      frequencies.forEach((freq, i) => {
+        if (freq === 0) return; // صمت
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = type; osc.frequency.value = freq;
+        const t0 = durations.slice(0, i).reduce((a, b) => a + b, 0);
+        const start = ctx.currentTime + t0;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(vol, start + 0.015);
+        gain.gain.linearRampToValueAtTime(0, start + durations[i] - 0.01);
+        osc.start(start); osc.stop(start + durations[i]);
+      });
+    } catch(e) {}
+  }
+  // صوت طلب جديد - تنبيه قوي متكرر لا يُفوَّت
+  function newOrderSound() {
+    playTone([880,880,0,880,880,0,1100,1100], [0.14,0.14,0.08,0.14,0.14,0.08,0.22,0.35], 'square', 0.6);
+  }
+  // تكرار صوت الطلب الجديد 3 مرات
+  let _orderInterval = null;
+  function startOrderAlarm() {
+    stopOrderAlarm();
+    newOrderSound();
+    let count = 0;
+    _orderInterval = setInterval(() => {
+      count++;
+      if (count >= 3) { stopOrderAlarm(); return; }
+      newOrderSound();
+    }, 1800);
+  }
+  function stopOrderAlarm() {
+    if (_orderInterval) { clearInterval(_orderInterval); _orderInterval = null; }
+  }
+  const sounds = {
+    newOrder:      startOrderAlarm,
+    stopOrder:     stopOrderAlarm,
+    cancelled:     () => playTone([600,400,250],             [0.18,0.2,0.4],  'sawtooth', 0.45),
+    chat:          () => playTone([880,1100],                [0.09,0.15],     'sine',     0.4),
+    completed:     () => playTone([523,659,784,659,784,1047],[0.1,0.1,0.1,0.08,0.08,0.45],'sine',0.55),
+    accepted:      () => playTone([523,659,784,1047],        [0.12,0.12,0.12,0.35],'sine', 0.6),
+    arrived:       () => playTone([784,784,0,784,1047],      [0.12,0.12,0.08,0.12,0.4],'sine',0.6),
+    alert:         () => playTone([700,700],                 [0.1,0.12],      'square',   0.35),
+  };
+  const vibrations = {
+    newOrder:   [500,150,500,150,500,150,700],
+    cancelled:  [400,150,400],
+    chat:       [100,50,100],
+    completed:  [200,100,200,100,400],
+    accepted:   [200,100,300],
+    arrived:    [300,100,300,100,500],
+  };
+  async function notify(title, body, type = 'alert') {
+    if (sounds[type]) sounds[type]();
+    if (navigator.vibrate) navigator.vibrate(vibrations[type] || [200]);
+    const requireInteract = ['newOrder','cancelled'].includes(type);
+    // إرسال عبر Service Worker (يعمل حتى عند إقفال الشاشة)
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIFICATION', title, body, notifType: type, url: location.pathname
+      });
+    } else if (Notification.permission === 'granted') {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        reg.showNotification(title, {
+          body, icon: 'assets/logo.png', badge: 'assets/logo.png',
+          vibrate: vibrations[type] || [200],
+          dir: 'rtl', lang: 'ar', tag: type, renotify: true,
+          requireInteraction: requireInteract, data: { type }
+        });
+      } catch(e) {
+        try { new Notification(title, { body, icon: 'assets/logo.png', dir: 'rtl', lang: 'ar', requireInteraction: requireInteract }); } catch(e2) {}
+      }
+    }
+  }
+  async function requestPermission() {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+    return (await Notification.requestPermission()) === 'granted';
+  }
+  function unlock() { try { getCtx(); } catch(e) {} document.removeEventListener('click', unlock); document.removeEventListener('touchstart', unlock); }
+  document.addEventListener('click', unlock);
+  document.addEventListener('touchstart', unlock);
+  return { sounds, notify, requestPermission };
+})();
+</script>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDVsOdieu4zCgOa9ZBASM05vX-DLeTmkc8&language=ar&v=beta&callback=initMap"></script>
+
 
 <script>
   /* ========== Firebase ========== */
@@ -336,6 +436,8 @@
     listenForOrders();
     startGPS();
     document.addEventListener('click', requestWakeLock);
+    // طلب إذن الإشعارات - ضروري للسائق
+    setTimeout(() => CarwaNotifications.requestPermission(), 1000);
   }
 
   /* ========== renderIdle ========== */
@@ -495,8 +597,7 @@
 
           m.addListener('click', () => iw.open(map, m));
           markers[o.id] = m;
-          document.getElementById('orderSound').play().catch(()=>{});
-          if (navigator.vibrate) navigator.vibrate(200);
+          CarwaNotifications.notify('طلب جديد! 🚕', `من: ${o.customerName||'زبون'} | ${o.estimatedDistance||''}`, 'newOrder');
         }
       });
 
@@ -539,8 +640,7 @@
       db.ref('orders/'+id).on('value', s => {
         const v = s.val();
         if (!v || v.status === 'cancelled') {
-          document.getElementById('cancelSound').play().catch(()=>{});
-          if (navigator.vibrate) navigator.vibrate([100,50,100]);
+          CarwaNotifications.notify('تم إلغاء الرحلة ❌', 'قام الزبون بإلغاء الرحلة', 'cancelled');
           document.getElementById('status-text').textContent = '⚠️ تم إلغاء الرحلة';
           db.ref('orders/'+id).off();
           setTimeout(() => location.reload(), 1500);
@@ -548,6 +648,8 @@
       });
 
       document.getElementById('status-text').textContent = '✅ رحلة نشطة';
+      CarwaNotifications.sounds.stopOrder && CarwaNotifications.sounds.stopOrder();
+      CarwaNotifications.notify('تم قبول الطلب ✅', `توجه إلى الزبون`, 'accepted');
       document.getElementById('chatHdrBtn').style.display = 'flex';
       initChat(id);
       renderTripAccepted(o);
@@ -591,6 +693,7 @@
     if (!currentOrder) return;
     db.ref('orders/'+currentOrder.id).update({ status:'in_progress' });
     document.getElementById('status-text').textContent = 'الرحلة جارية...';
+    CarwaNotifications.notify('الرحلة بدأت 🛣️', 'توجه إلى وجهة الزبون', 'arrived');
     document.getElementById('ui-container').innerHTML = `
       <div class="trip-card">
         <div class="trip-row">
@@ -620,6 +723,7 @@
     document.getElementById('statPrice').textContent = Math.round(price).toLocaleString()+' د.ع';
     document.getElementById('statsOverlay').style.display = 'flex';
     db.ref('orders/'+currentOrder.id).update({ status:'completed', cost:price });
+    CarwaNotifications.notify('تمت الرحلة بنجاح 🎉', `الأجرة: ${Math.round(price).toLocaleString()} د.ع`, 'completed');
   }
 
   function cancelTrip() {
@@ -718,8 +822,7 @@
       if (m.sender!=='driver' && !panel.classList.contains('open')) {
         unreadChat++;
         document.getElementById('chatHdrBtn').classList.add('has-badge');
-        document.getElementById('chatSound').play().catch(()=>{});
-        if (navigator.vibrate) navigator.vibrate(80);
+        CarwaNotifications.notify('رسالة من الزبون 💬', m.text, 'chat');
       }
     });
   }

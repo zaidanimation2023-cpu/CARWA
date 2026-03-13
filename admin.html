@@ -161,9 +161,69 @@
     </div>
   </div></div>
 
+  <!-- ===== نظام الإشعارات الصوتية كروة - الإدارة ===== -->
+  <script>
+  const CarwaNotifications = (() => {
+    let audioCtx = null;
+    function getCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+    function playTone(frequencies, durations, type = 'sine', vol = 0.5) {
+      try {
+        const ctx = getCtx();
+        frequencies.forEach((freq, i) => {
+          if (freq === 0) return;
+          const osc = ctx.createOscillator(), gain = ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.type = type; osc.frequency.value = freq;
+          const start = ctx.currentTime + durations.slice(0, i).reduce((a, b) => a + b, 0);
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(vol, start + 0.015);
+          gain.gain.linearRampToValueAtTime(0, start + durations[i] - 0.01);
+          osc.start(start); osc.stop(start + durations[i]);
+        });
+      } catch(e) {}
+    }
+    const sounds = {
+      newOrder:  () => playTone([880,0,880,0,1100], [0.13,0.07,0.13,0.07,0.3], 'square', 0.5),
+      cancelled: () => playTone([600,400,250],       [0.18,0.2,0.4],           'sawtooth',0.4),
+      completed: () => playTone([523,659,1047],       [0.1,0.1,0.35],           'sine',   0.5),
+      alert:     () => playTone([700,700],            [0.1,0.12],               'square', 0.35),
+    };
+    async function notify(title, body, type = 'alert') {
+      if (sounds[type]) sounds[type]();
+      if (navigator.vibrate) navigator.vibrate([200,100,200]);
+      if (Notification.permission === 'granted') {
+        try {
+          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SHOW_NOTIFICATION', title, body, notifType: type, url: location.pathname
+            });
+          } else {
+            new Notification(title, { body, icon: 'assets/logo.png', dir: 'rtl', lang: 'ar' });
+          }
+        } catch(e) {}
+      }
+    }
+    async function requestPermission() {
+      if (!('Notification' in window)) return false;
+      if (Notification.permission === 'granted') return true;
+      if (Notification.permission === 'denied') return false;
+      return (await Notification.requestPermission()) === 'granted';
+    }
+    function unlock() { try { getCtx(); } catch(e) {} document.removeEventListener('click', unlock); }
+    document.addEventListener('click', unlock);
+    setTimeout(() => requestPermission(), 2000);
+    return { sounds, notify, requestPermission };
+  })();
+  </script>
+
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
 
   <script>
     const firebaseConfig = { apiKey: "AIzaSyDkosn3orZqLf5Dd7g32TGUarW5a3MF2Oc", databaseURL: "https://carwa-zaid-default-rtdb.firebaseio.com", projectId: "carwa-zaid" };
@@ -291,6 +351,39 @@
               list.innerHTML += `<div class="list-item"><div class="user-info"><span class="pin-code text-primary">${child.key}</span><div style="font-size:0.8rem; color:#666; margin-top:4px;">ينتهي خلال: ${diffDays} يوم</div></div><button class="btn-action" style="background:#e3f2fd; color:#0d6efd; width:auto; padding:0 15px;" onclick="copyPin('${child.key}')"><i class="fas fa-copy"></i></button></div>`;
             } else { db.ref('pins/' + child.key).remove(); }
           });
+        });
+
+        // تتبع الطلبات الجديدة للإشعارات
+        let _adminKnownOrders = null;
+        db.ref('orders').on('child_added', snap => {
+          const o = snap.val();
+          if (_adminKnownOrders === null) { _adminKnownOrders = true; return; } // تجاهل التحميل الأول
+          if (o && o.status === 'pending') {
+            CarwaNotifications.notify('طلب جديد! 🚕', `الزبون: ${o.customerName||'زبون'} ينتظر كابتن`, 'newOrder');
+          }
+          if (o && o.status === 'cancelled') {
+            CarwaNotifications.notify('رحلة ملغاة ❌', `تم إلغاء رحلة ${o.customerName||''}`, 'cancelled');
+          }
+          if (o && o.status === 'completed') {
+            CarwaNotifications.notify('رحلة مكتملة ✅', `اكتملت رحلة ${o.customerName||''}`, 'completed');
+          }
+        });
+
+        // تتبع تغيير حالة الطلبات
+        let _adminStatusCache = {};
+        db.ref('orders').on('child_changed', snap => {
+          const o = snap.val(); if (!o) return;
+          const prev = _adminStatusCache[snap.key];
+          _adminStatusCache[snap.key] = o.status;
+          if (prev === o.status) return; // لا تغيير حقيقي
+          if (o.status === 'accepted')    CarwaNotifications.notify('تم قبول رحلة ✅', `الكابتن ${o.driver||''} قبل طلب ${o.customerName||''}`, 'alert');
+          if (o.status === 'in_progress') CarwaNotifications.notify('رحلة جارية 🛣️',  `رحلة ${o.customerName||''} بدأت`, 'alert');
+          if (o.status === 'completed')   CarwaNotifications.notify('رحلة مكتملة 🎉', `اكتملت رحلة ${o.customerName||''} | ${(o.cost||0).toLocaleString()} د.ع`, 'completed');
+          if (o.status === 'cancelled')   CarwaNotifications.notify('رحلة ملغاة ❌',   `تم إلغاء رحلة ${o.customerName||''}`, 'cancelled');
+        });
+        // تهيئة الكاش الأولي
+        db.ref('orders').limitToLast(50).once('value', snap => {
+          snap.forEach(c => { _adminStatusCache[c.key] = c.val()?.status; });
         });
 
         db.ref('orders').limitToLast(50).on('value', snap => {

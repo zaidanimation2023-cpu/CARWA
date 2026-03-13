@@ -490,9 +490,91 @@
   </div>
 </div>
 
-<audio id="arriveSound"      src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-<audio id="driverFoundSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-<audio id="chatSound"        src="https://assets.mixkit.co/active_storage/sfx/1717/1717-preview.mp3"></audio>
+<!-- ===== نظام الإشعارات الصوتية كروة ===== -->
+<script>
+// ============================================================
+//  🔔 كروة - نظام الإشعارات الصوتية الشامل (الزبون)
+//  يعمل حتى عند إقفال الشاشة عبر Service Worker
+// ============================================================
+const CarwaNotifications = (() => {
+  let audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function playTone(frequencies, durations, type = 'sine', vol = 0.6) {
+    try {
+      const ctx = getCtx();
+      frequencies.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = type; osc.frequency.value = freq;
+        const t0 = durations.slice(0, i).reduce((a, b) => a + b, 0);
+        const start = ctx.currentTime + t0;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(vol, start + 0.01);
+        gain.gain.linearRampToValueAtTime(0, start + durations[i] - 0.01);
+        osc.start(start); osc.stop(start + durations[i]);
+      });
+    } catch(e) {}
+  }
+  const sounds = {
+    accepted:      () => playTone([523,659,784,1047],        [0.13,0.13,0.13,0.35], 'sine',     0.6),
+    cancelled:     () => playTone([600,400,250],             [0.18,0.2,0.4],        'sawtooth', 0.45),
+    driverArrived: () => playTone([784,784,0,784,784,0,1047],[0.1,0.1,0.06,0.1,0.1,0.06,0.4],'sine',0.65),
+    chat:          () => playTone([880,1100],                [0.09,0.15],           'sine',     0.4),
+    completed:     () => playTone([523,659,784,659,784,1047],[0.1,0.1,0.1,0.08,0.08,0.45],'sine',0.55),
+    orderSent:     () => playTone([440,550],                 [0.1,0.22],            'sine',     0.4),
+    tripStarted:   () => playTone([659,784,1047],            [0.13,0.13,0.35],      'sine',     0.55),
+    alert:         () => playTone([700,700],                 [0.1,0.12],            'square',   0.35),
+  };
+  const vibrations = {
+    accepted:      [200,100,200,100,300],
+    cancelled:     [400,150,400],
+    driverArrived: [300,100,300,100,400],
+    chat:          [100],
+    completed:     [200,100,200,100,300],
+    orderSent:     [150,80,150],
+    tripStarted:   [200,100,300],
+    alert:         [200],
+  };
+  async function notify(title, body, type = 'alert') {
+    if (sounds[type]) sounds[type]();
+    if (navigator.vibrate) navigator.vibrate(vibrations[type] || [200]);
+    // إرسال عبر Service Worker (يعمل حتى عند إقفال الشاشة)
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIFICATION', title, body, notifType: type, url: location.pathname
+      });
+    } else if (Notification.permission === 'granted') {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        reg.showNotification(title, {
+          body, icon: 'assets/logo.png', badge: 'assets/logo.png',
+          vibrate: vibrations[type] || [200],
+          dir: 'rtl', lang: 'ar', tag: type, renotify: true,
+          requireInteraction: ['accepted','driverArrived'].includes(type),
+          data: { type }
+        });
+      } catch(e) {
+        try { new Notification(title, { body, icon: 'assets/logo.png', dir: 'rtl', lang: 'ar' }); } catch(e2) {}
+      }
+    }
+  }
+  async function requestPermission() {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+    return (await Notification.requestPermission()) === 'granted';
+  }
+  function unlock() { try { getCtx(); } catch(e) {} document.removeEventListener('click', unlock); document.removeEventListener('touchstart', unlock); }
+  document.addEventListener('click', unlock);
+  document.addEventListener('touchstart', unlock);
+  return { sounds, notify, requestPermission };
+})();
+</script>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -542,6 +624,8 @@
     renderUI();
     fetchUserLocation();
     subscribeNearbyDrivers();
+    // طلب إذن الإشعارات تلقائياً
+    setTimeout(() => CarwaNotifications.requestPermission(), 1500);
   }
 
   /* ========== GPS ========== */
@@ -695,7 +779,10 @@
     const btn = document.getElementById('sendOrderBtn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري...'; }
     db.ref('orders/' + oId).set(orderData)
-      .then(() => { currentStep = 'waiting'; renderUI(); trackOrder(oId); })
+      .then(() => {
+        CarwaNotifications.notify('تم إرسال طلبك 🚕', 'جاري البحث عن كابتن قريب...', 'orderSent');
+        currentStep = 'waiting'; renderUI(); trackOrder(oId);
+      })
       .catch(() => { toast('خطأ في الإرسال'); if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-taxi"></i> اطلب كروة الآن';} });
   }
 
@@ -705,12 +792,19 @@
     orderRef.on('value', snap => {
       const data = snap.val(); if (!data) return;
       driverData = data;
-      if (data.status === 'cancelled') { toast('تم إلغاء الرحلة'); if(orderRef)orderRef.off(); setTimeout(()=>location.reload(),1500); }
+      if (data.status === 'cancelled') {
+        CarwaNotifications.notify('تم إلغاء الرحلة ❌', 'تم إلغاء رحلتك', 'cancelled');
+        toast('تم إلغاء الرحلة'); if(orderRef)orderRef.off(); setTimeout(()=>location.reload(),1500);
+      }
       if (data.status === 'accepted' || data.status === 'in_progress') {
         if (!window.driverFoundPlayed) {
-          document.getElementById('driverFoundSound').play().catch(()=>{});
+          if (data.status === 'accepted') {
+            CarwaNotifications.notify('تم قبول طلبك! 🚗', `الكابتن ${data.driver||''} في الطريق إليك`, 'accepted');
+          } else {
+            CarwaNotifications.notify('الرحلة بدأت! 🛣️', 'أنت الآن في رحلتك', 'tripStarted');
+          }
           window.driverFoundPlayed = true;
-          if (navigator.vibrate) navigator.vibrate(100);
+          if (navigator.vibrate) navigator.vibrate([200,100,200]);
         }
         currentStep = 'tracking';
         const msg = data.status === 'accepted' ? 'الكابتن في الطريق إليك 🚗' : 'أنت في الرحلة الآن 🛣️';
@@ -791,8 +885,7 @@
       if (m.sender !== 'customer' && !panel.classList.contains('open')) {
         unreadChat++;
         document.getElementById('chatToggleBtn').classList.add('has-unread');
-        document.getElementById('chatSound').play().catch(()=>{});
-        if (navigator.vibrate) navigator.vibrate(60);
+        CarwaNotifications.notify('رسالة جديدة من الكابتن 💬', m.text, 'chat');
       }
     });
   }
@@ -828,7 +921,7 @@
     document.getElementById('statTime').textContent  = data.duration  || window.estimatedTime || '--';
     document.getElementById('statPrice').textContent = (data.cost||0).toLocaleString() + ' د.ع';
     document.getElementById('statsOverlay').style.display = 'flex';
-    document.getElementById('arriveSound').play().catch(()=>{});
+    CarwaNotifications.notify('وصلت إلى وجهتك! 🎉', `المسافة: ${data.distance||window.estimatedDist||'--'} | السعر: ${(data.cost||0).toLocaleString()} د.ع`, 'completed');
   }
 
   /* ========== Cancel / Logout ========== */
